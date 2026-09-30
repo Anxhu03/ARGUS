@@ -1,1 +1,3 @@
-"""ARGUS backend package."""
+"""
+ARGUS Backend package root.
+"""
