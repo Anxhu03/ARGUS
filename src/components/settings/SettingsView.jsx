@@ -42,7 +42,7 @@ export default function SettingsView() {
       {/* Autonomous Tuning Card */}
       <GlassCard style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
-          <Sliders size={18} color="var(--accent-cyan)" />
+          <Sliders size={18} color="#0f172a" />
           <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Multi-Agent Consensus Thresholds</h3>
         </div>
 
@@ -52,7 +52,7 @@ export default function SettingsView() {
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Minimum Consensus Threshold for Auto-Resolution
               </label>
-              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0284c7' }}>
                 {consensusThreshold}%
               </span>
             </div>
@@ -62,7 +62,7 @@ export default function SettingsView() {
               max="99"
               value={consensusThreshold}
               onChange={(e) => setConsensusThreshold(Number(e.target.value))}
-              style={{ width: '100%', accentColor: 'var(--accent-cyan)' }}
+              style={{ width: '100%', accentColor: '#0284c7' }}
             />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               If multi-agent confidence score falls below {consensusThreshold}%, the case automatically transfers to Human Review.
@@ -74,7 +74,7 @@ export default function SettingsView() {
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Autonomous Resolution Dollar Cap
               </label>
-              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--status-emerald)' }}>
+              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#16a34a' }}>
                 ${autoResolveCap}.00
               </span>
             </div>
@@ -85,7 +85,7 @@ export default function SettingsView() {
               step="50"
               value={autoResolveCap}
               onChange={(e) => setAutoResolveCap(Number(e.target.value))}
-              style={{ width: '100%', accentColor: 'var(--status-emerald)' }}
+              style={{ width: '100%', accentColor: '#16a34a' }}
             />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               Claims exceeding ${autoResolveCap}.00 mandate two-tier human supervisor authorization before fund release.
@@ -97,7 +97,7 @@ export default function SettingsView() {
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Carrier Spatial Geofence Tolerance
               </label>
-              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--status-amber)' }}>
+              <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#d97706' }}>
                 {geofenceTolerance} meters
               </span>
             </div>
@@ -108,7 +108,7 @@ export default function SettingsView() {
               step="25"
               value={geofenceTolerance}
               onChange={(e) => setGeofenceTolerance(Number(e.target.value))}
-              style={{ width: '100%', accentColor: 'var(--status-amber)' }}
+              style={{ width: '100%', accentColor: '#d97706' }}
             />
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               Delivery scanner GPS offset greater than {geofenceTolerance}m flags a spatial contradiction for driver route audit.
@@ -116,7 +116,7 @@ export default function SettingsView() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
           <button className="btn btn-primary" onClick={handleSave}>
             <Save size={15} />
             <span>Save Threshold Configuration</span>
@@ -127,7 +127,7 @@ export default function SettingsView() {
       {/* Connected Services & Mock Integrations */}
       <GlassCard style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Radio size={18} color="var(--status-emerald)" />
+          <Radio size={18} color="#16a34a" />
           <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Active Integrations & Mock Service Gateways</h3>
         </div>
 
@@ -147,17 +147,17 @@ export default function SettingsView() {
                 justifyContent: 'space-between',
                 padding: '12px 16px',
                 borderRadius: 'var(--radius-sm)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--glass-border)',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
                 fontSize: '13px'
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{svc.name}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{svc.type}</div>
+                <div style={{ fontWeight: 600, color: '#0f172a' }}>{svc.name}</div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>{svc.type}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--status-emerald)', fontSize: '12px', fontWeight: 500 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--status-emerald)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '12px', fontWeight: 500 }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
                 <span>{svc.status}</span>
               </div>
             </div>
@@ -166,25 +166,33 @@ export default function SettingsView() {
       </GlassCard>
 
       {/* Developer Environment & Ownership Card */}
-      <GlassCard style={{ padding: '20px', background: 'rgba(10, 16, 28, 0.5)' }}>
-        <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+      <div
+        className="glass-panel"
+        style={{
+          padding: '20px',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: 'var(--radius-lg)'
+        }}
+      >
+        <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
           Workspace Identity & Git Branch
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '12px' }}>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Frontend Owner:</span>
-            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>Anxhu — Frontend 1</div>
+            <span style={{ color: '#64748b' }}>Frontend Owner:</span>
+            <div style={{ fontWeight: 600, color: '#0f172a', marginTop: '2px' }}>Anxhu — Frontend 1</div>
           </div>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Branch:</span>
-            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--accent-cyan)', marginTop: '2px' }}>anxhu/frontend-1</div>
+            <span style={{ color: '#64748b' }}>Active Branch:</span>
+            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0284c7', marginTop: '2px' }}>anxhu/frontend-1</div>
           </div>
           <div>
-            <span style={{ color: 'var(--text-muted)' }}>Platform Engine:</span>
-            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>ARGUS Core v4.2 Production</div>
+            <span style={{ color: '#64748b' }}>Platform Engine:</span>
+            <div style={{ fontWeight: 600, color: '#0f172a', marginTop: '2px' }}>ARGUS Core v4.2 Production</div>
           </div>
         </div>
-      </GlassCard>
+      </div>
     </div>
   );
 }
