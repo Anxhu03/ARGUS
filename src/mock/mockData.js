@@ -1074,6 +1074,25 @@ export const PATTERNS_DATA = [
     ],
     status: "Remediation Scheduled",
     relatedCases: ["ARG-1046", "ARG-1025", "ARG-1011"]
+  },
+  {
+    id: "PAT-005",
+    title: "Recurring 3DS Step-Up Token Timeout on High-Value Card Processing",
+    dimension: "Payment Gateway",
+    severity: "Medium",
+    confidence: "95.2%",
+    affectedCasesCount: 11,
+    timeRange: "Past 5 Days",
+    affectedProducts: ["All Tier-1 Orders > $500", "Annual SaaS Renewals"],
+    observation: "Customers completing bank SMS OTP verification on mobile safari experience session token invalidation due to cross-site tracking cookie restrictions, causing successful bank debit with abandoned checkout state.",
+    consistencyScore: "97.4% Transaction Telemetry Match",
+    recommendedActions: [
+      "Migrate 3DS challenge frame to first-party subdomain auth proxy",
+      "Implement server-to-server webhook reconciliation with 3-minute grace period",
+      "Deploy automated uncaptured auth voiding within 15 minutes of session drop"
+    ],
+    status: "Active Monitoring",
+    relatedCases: ["ARG-1045", "ARG-1033", "ARG-1014"]
   }
 ];
 
