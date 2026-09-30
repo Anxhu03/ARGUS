@@ -32,14 +32,14 @@ export default function AgentDetailModal({ agentId, caseData, onClose }) {
       subtitle={`Agent Version: ${agent.version} • Execution Time: ${agent.executionTime}`}
       maxWidth="680px"
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {/* Status & Confidence Banner */}
         <div
           style={{
             padding: '14px 18px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid var(--glass-border)',
+            borderRadius: '8px',
+            background: '#f8fafc',
+            border: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -52,9 +52,9 @@ export default function AgentDetailModal({ agentId, caseData, onClose }) {
               style={{
                 width: '36px',
                 height: '36px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(0, 242, 254, 0.1)',
-                color: 'var(--accent-cyan)',
+                borderRadius: '6px',
+                background: '#e0f2fe',
+                color: '#0284c7',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -63,18 +63,18 @@ export default function AgentDetailModal({ agentId, caseData, onClose }) {
               <Icon size={20} />
             </div>
             <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
                 {agent.agentName}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                Execution Status: <strong style={{ color: 'var(--accent-cyan)' }}>{agent.status}</strong>
+              <div style={{ fontSize: '11px', color: '#64748b' }}>
+                Execution Status: <strong style={{ color: '#0284c7' }}>{agent.status}</strong>
               </div>
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Verification Confidence</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--status-emerald)' }}>
+            <div style={{ fontSize: '11px', color: '#64748b' }}>Verification Confidence</div>
+            <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#16a34a' }}>
               {agent.confidenceScore}%
             </div>
           </div>
@@ -82,43 +82,43 @@ export default function AgentDetailModal({ agentId, caseData, onClose }) {
 
         {/* Assigned Task Description */}
         <div>
-          <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '6px' }}>
+          <h4 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', marginBottom: '6px' }}>
             Assigned Investigation Task
           </h4>
           <p
             style={{
-              fontSize: '13px',
-              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              color: '#334155',
               lineHeight: 1.5,
-              background: 'rgba(0, 0, 0, 0.3)',
-              padding: '12px 14px',
-              borderRadius: 'var(--radius-sm)',
-              borderLeft: '3px solid var(--accent-cyan)'
+              background: '#f8fafc',
+              padding: '10px 14px',
+              borderRadius: '6px',
+              borderLeft: '3px solid #0284c7'
             }}
           >
             {agent.task}
           </p>
         </div>
 
-        {/* Agent Metrics Grid */}
+        {/* Real-time Query Metrics */}
         {agent.metrics && agent.metrics.length > 0 && (
           <div>
-            <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '8px' }}>
-              Telemetry Metrics & State Indicators
+            <h4 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', marginBottom: '8px' }}>
+              Gateway & Protocol Metrics
             </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
-              {agent.metrics.map((m, i) => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '8px' }}>
+              {agent.metrics.map((m, idx) => (
                 <div
-                  key={i}
+                  key={idx}
                   style={{
-                    padding: '10px 12px',
-                    borderRadius: 'var(--radius-sm)',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid var(--glass-border)'
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    background: '#f8fafc',
+                    border: '1px solid var(--border)'
                   }}
                 >
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{m.label}</div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', marginTop: '2px', wordBreak: 'break-all' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>{m.label}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-mono)', color: '#0f172a', marginTop: '2px' }}>
                     {m.value}
                   </div>
                 </div>
@@ -127,39 +127,33 @@ export default function AgentDetailModal({ agentId, caseData, onClose }) {
           </div>
         )}
 
-        {/* Verified Findings */}
+        {/* Empirical Findings */}
         <div>
-          <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '8px' }}>
-            Empirical Findings & Cross-Checks
+          <h4 style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            Empirical Findings & Verified Ledger Facts
           </h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {agent.findings?.map((finding, idx) => (
-              <div
-                key={idx}
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {agent.findings?.map((find, i) => (
+              <li
+                key={i}
                 style={{
                   display: 'flex',
                   alignItems: 'flex-start',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.05)'
+                  gap: '8px',
+                  fontSize: '12px',
+                  color: '#334155',
+                  lineHeight: 1.4,
+                  padding: '6px 10px',
+                  background: '#f8fafc',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0'
                 }}
               >
-                <CheckCircle2 size={16} color="var(--status-emerald)" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <span style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
-                  {finding}
-                </span>
-              </div>
+                <CheckCircle2 size={14} color="#16a34a" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>{find}</span>
+              </li>
             ))}
-          </div>
-        </div>
-
-        {/* Modal Close Action */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid var(--glass-border)' }}>
-          <button className="btn btn-secondary" onClick={onClose}>
-            Close Telemetry View
-          </button>
+          </ul>
         </div>
       </div>
     </Modal>

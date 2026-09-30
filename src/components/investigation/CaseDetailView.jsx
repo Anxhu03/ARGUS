@@ -78,53 +78,53 @@ export default function CaseDetailView() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Case Header */}
       <CaseHeader caseData={currentCase} onReload={handleReRunAgents} />
 
       {/* Investigation Timeline */}
       <InvestigationTimeline timeline={currentCase.timeline || []} />
 
-      {/* Tab Switcher */}
+      {/* Tab Switcher Pills */}
       <div
         style={{
           display: 'flex',
-          gap: '8px',
-          borderBottom: '1px solid var(--glass-border)',
-          paddingBottom: '4px'
+          gap: '6px',
+          borderBottom: '1px solid var(--border)',
+          paddingBottom: '8px'
         }}
       >
         <button
-          className={`btn ${activeTab === 'workflow' ? 'btn-primary' : 'btn-ghost'}`}
+          className={`btn ${activeTab === 'workflow' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
           onClick={() => setActiveTab('workflow')}
-          style={{ fontSize: '13px', gap: '6px' }}
+          style={{ height: '34px', borderRadius: '6px' }}
         >
-          <GitBranch size={16} />
-          <span>Investigation & Agents DAG</span>
+          <GitBranch size={15} />
+          <span>Investigation Workflow & Agents DAG</span>
         </button>
 
         <button
-          className={`btn ${activeTab === 'evidence' ? 'btn-primary' : 'btn-ghost'}`}
+          className={`btn ${activeTab === 'evidence' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
           onClick={() => setActiveTab('evidence')}
-          style={{ fontSize: '13px', gap: '6px' }}
+          style={{ height: '34px', borderRadius: '6px' }}
         >
-          <FileText size={16} />
+          <FileText size={15} />
           <span>Evidence Matrix ({currentCase.evidence?.length || 0})</span>
         </button>
 
         <button
-          className={`btn ${activeTab === 'customer-intel' ? 'btn-primary' : 'btn-ghost'}`}
+          className={`btn ${activeTab === 'customer-intel' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
           onClick={() => setActiveTab('customer-intel')}
-          style={{ fontSize: '13px', gap: '6px' }}
+          style={{ height: '34px', borderRadius: '6px' }}
         >
-          <BrainCircuit size={16} />
+          <BrainCircuit size={15} />
           <span>Customer Case Memory</span>
         </button>
       </div>
 
       {/* Tab 1: Multi-Agent Workflow & Diagnosis */}
       {activeTab === 'workflow' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Multi-Agent DAG Visualization */}
           <AgentVisualizationGraph
             caseData={currentCase}
@@ -170,21 +170,11 @@ export default function CaseDetailView() {
       {/* Tab 3: Customer Case Memory & Reliability Context */}
       {activeTab === 'customer-intel' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div
-            style={{
-              padding: '24px',
-              borderRadius: 'var(--radius-lg)',
-              background: 'rgba(14, 21, 37, 0.75)',
-              border: '1px solid var(--glass-border)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px'
-            }}
-          >
+          <div className="ref-card" style={{ padding: '24px', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Customer Case Memory Profile</h3>
-                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>Customer Case Memory Profile</h3>
+                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                   Historic context indexed to prevent redundant investigations and recognize customer veracity
                 </p>
               </div>
@@ -192,46 +182,46 @@ export default function CaseDetailView() {
               <div
                 style={{
                   padding: '6px 14px',
-                  borderRadius: 'var(--radius-full)',
-                  background: 'rgba(0, 242, 254, 0.1)',
-                  border: '1px solid rgba(0, 242, 254, 0.3)',
+                  borderRadius: '9999px',
+                  background: '#e0f2fe',
+                  border: '1px solid #bae6fd',
                   fontSize: '12px',
                   fontWeight: 600,
-                  color: 'var(--accent-cyan)'
+                  color: '#0284c7'
                 }}
               >
                 Reliability Score: {currentCase.customer.reliabilityScore}% ({currentCase.customer.reliabilityBand})
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-              <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Customer Account</div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginTop: '2px' }}>{currentCase.customer.name}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{currentCase.customer.email}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              <div style={{ padding: '14px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>Customer Account</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a', marginTop: '2px' }}>{currentCase.customer.name}</div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>{currentCase.customer.email}</div>
               </div>
 
-              <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Total Historical Cases</div>
-                <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', marginTop: '2px' }}>
+              <div style={{ padding: '14px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>Total Historical Cases</div>
+                <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#0284c7', marginTop: '2px' }}>
                   {currentCase.customer.totalCases || 3}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>
                   {currentCase.customer.resolvedCases || 3} Verified / {currentCase.customer.disputedCases || 0} Disputed
                 </div>
               </div>
 
-              <div style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Customer Tier</div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--status-emerald)', marginTop: '2px' }}>
+              <div style={{ padding: '14px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>Customer Tier</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#16a34a', marginTop: '2px' }}>
                   {currentCase.customer.tier}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Member since {currentCase.customer.joinedDate}</div>
+                <div style={{ fontSize: '11px', color: '#64748b' }}>Member since {currentCase.customer.joinedDate}</div>
               </div>
             </div>
 
-            <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-sm)', background: 'rgba(0, 242, 254, 0.05)', border: '1px solid rgba(0, 242, 254, 0.15)', fontSize: '12px', color: 'var(--text-secondary)' }}>
-              <strong style={{ color: 'var(--accent-cyan)' }}>Reliability Policy Note: </strong>
+            <div style={{ padding: '12px 16px', borderRadius: '6px', background: '#f8fafc', border: '1px solid var(--border)', fontSize: '12px', color: '#475569' }}>
+              <strong style={{ color: '#0284c7' }}>Reliability Policy Note: </strong>
               ARGUS uses neutral <em>Complaint Reliability</em> indexing based strictly on verified technical findings and historical delivery receipts, avoiding speculative fraud grading.
             </div>
           </div>
