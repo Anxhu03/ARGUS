@@ -1,46 +1,31 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
-import TopBar from './TopBar';
+import Header from './Header';
 import Toast from '../common/Toast';
 
 export default function AppShell({ children }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="app-shell-root">
-      {/* Mobile Drawer (Only visible when toggled on smaller screens) */}
+    <div className="min-h-screen bg-[#080b12] text-slate-100 flex flex-col lg:flex-row antialiased selection:bg-blue-600 selection:text-white">
+      {/* Fixed/Sticky Left Sidebar (~224px wide) */}
       <Sidebar
         isOpen={mobileNavOpen}
         onCloseMobile={() => setMobileNavOpen(false)}
       />
 
-      {/* Main Application Container matching reference max-w-[1400px] */}
-      <div className="app-main-canvas">
-        {/* Reference Top Header with centered pill navigation */}
-        <TopBar onToggleMobile={() => setMobileNavOpen(!mobileNavOpen)} />
+      {/* Main Content Area to the right of sidebar */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen bg-[#080b12]">
+        {/* Top Header */}
+        <Header onToggleMobile={() => setMobileNavOpen(true)} />
 
-        {/* Content Area */}
-        <main className="app-content-body animate-fade-in">
+        {/* Dashboard / Active View Canvas */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-7 max-w-[1600px] w-full mx-auto">
           {children}
         </main>
-
-        {/* Subtle Footer */}
-        <footer className="app-footer">
-          <div className="footer-left">
-            <span className="footer-brand">ARGUS Intelligence</span>
-            <span className="footer-separator">•</span>
-            <span>Deterministic Multi-Agent Investigation Architecture</span>
-          </div>
-          <div className="footer-right">
-            <span>Branch: <code>anxhu/frontend-1</code></span>
-            <span className="footer-separator">•</span>
-            <span className="footer-status-dot"></span>
-            <span>All Neural Agent Nodes Online</span>
-          </div>
-        </footer>
       </div>
 
-      {/* Global Toast Overlay */}
+      {/* Global Notifications/Toast */}
       <Toast />
     </div>
   );
