@@ -114,7 +114,56 @@ d:/ARGUS/
 
 ---
 
-## 3. Running & Verifying Locally
+## 3. Dashboard Migration & Reference Architecture
+
+Following executive direction, the old monolithic landing page was completely deleted from `index.html`. ARGUS now boots directly into the **ARGUS Dashboard / Application UI**, adopting the modern UI/UX design language from the reference:
+`https://v0-e-commerce-dashboard-sooty.vercel.app/`
+
+### Key Reference Architectural Highlights:
+1. **Centered Pill Navbar (`TopBar.jsx`):**
+   - High-contrast rounded pill navigation (`Dashboard`, `Cases`, `Investigations`, `Support`, `Intelligence`, `Patterns`, `Settings`)
+   - Brand logo, live multi-agent indicator pill, fast search, notification bell, and operator avatar
+2. **Off-Canvas Responsive Mobile Drawer (`Sidebar.jsx`):**
+   - Backdrop blur, clean drawer with complete navigation links and quick "Launch Investigation" action
+3. **Executive Dashboard (`DashboardView.jsx`):**
+   - 4 metric KPI cards matching the reference style
+   - 2-column velocity / throughput chart with custom SVG bars and SLA flow
+   - 1-column active investigations queue
+   - Multi-agent swarm health telemetry
+   - Recent cases table with live status pills
+   - Live investigation activity stream
+4. **Deterministic Case Investigation (`CaseDetailView.jsx`):**
+   - 9-stage sequence timeline
+   - Parallel agent DAG workflow graph
+   - Verifiable evidence matrix with raw JSON viewer
+   - Neutral contradiction detection with non-fraud ethical safeguard
+   - Root cause chain and actionable resolution
+5. **Support Hub (`SupportView.jsx`):**
+   - Dual mode: FAQ Knowledge Base for static questions + ARGUS Agent for autonomous investigation intake
+6. **Cross-Case Intelligence (`IntelligenceView.jsx`):**
+   - Reinforced loop: `Complaint → Investigation → Resolution → Memory → Pattern → Prevention`
+   - 5 pattern dimensions: Seller, Product, Delivery, Payment, System
+   - Institutional case memory search
+   - Systemic prevention recommendation toggles and adaptive evidence protocols
+
+---
+
+## 4. Continuous GitHub Milestones Pushed to `anxhu/frontend-1`
+
+```
+ba700dd feat: migrate ARGUS landing page to dashboard
+7fab861 feat: build dashboard overview
+81a5524 feat: add case management
+2f00a88 feat: add investigation interface
+faf8c06 feat: add evidence and contradiction views
+bca8e3b feat: add support FAQ and ARGUS agent
+dd49d65 feat: add intelligence and pattern views
+b6207e6 fix: responsive dashboard layout
+```
+
+---
+
+## 5. Running & Verifying Locally
 
 - **Development Server:**
   ```bash
@@ -127,3 +176,4 @@ d:/ARGUS/
   npm.cmd run build
   ```
   Generates production-optimized bundle in `dist/`.
+
