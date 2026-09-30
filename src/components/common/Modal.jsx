@@ -36,12 +36,12 @@ export default function Modal({
         {/* Header */}
         <div
           style={{
-            padding: '20px 24px',
-            borderBottom: '1px solid var(--glass-border)',
+            padding: '18px 24px',
+            borderBottom: '1px solid #e2e8f0',
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            background: 'rgba(15, 23, 42, 0.4)'
+            background: '#f8fafc'
           }}
         >
           <div>
@@ -57,8 +57,8 @@ export default function Modal({
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--glass-border)',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: 'var(--radius-sm)',
               color: 'var(--text-secondary)',
               cursor: 'pointer',

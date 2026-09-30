@@ -19,8 +19,8 @@ export default function FAQDetailModal({ faq, onClose, onSelectRelated }) {
           style={{
             padding: '12px 16px',
             borderRadius: 'var(--radius-md)',
-            background: 'rgba(0, 242, 254, 0.05)',
-            border: '1px solid rgba(0, 242, 254, 0.2)',
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -29,12 +29,12 @@ export default function FAQDetailModal({ faq, onClose, onSelectRelated }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-            <BookOpen size={16} color="var(--accent-cyan)" />
-            <span style={{ color: 'var(--text-muted)' }}>Approved Policy Source:</span>
-            <strong style={{ color: 'var(--accent-cyan)' }}>{faq.source}</strong>
+            <BookOpen size={16} color="#16a34a" />
+            <span style={{ color: '#475569' }}>Approved Policy Source:</span>
+            <strong style={{ color: '#15803d' }}>{faq.source}</strong>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b' }}>
             <Calendar size={13} />
             <span>Updated: {faq.lastUpdated}</span>
           </div>
@@ -42,18 +42,18 @@ export default function FAQDetailModal({ faq, onClose, onSelectRelated }) {
 
         {/* Full Comprehensive Answer */}
         <div>
-          <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '8px' }}>
+          <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', marginBottom: '8px' }}>
             Detailed Knowledge-Base Response
           </h4>
           <div
             style={{
               fontSize: '14px',
-              color: 'var(--text-primary)',
+              color: '#1e293b',
               lineHeight: 1.7,
-              background: 'rgba(10, 16, 28, 0.6)',
+              background: '#f8fafc',
               padding: '16px 18px',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--glass-border)'
+              border: '1px solid #e2e8f0'
             }}
           >
             {faq.fullAnswer}
@@ -61,18 +61,18 @@ export default function FAQDetailModal({ faq, onClose, onSelectRelated }) {
         </div>
 
         {/* Helpful Count */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.02)', fontSize: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
-            <ThumbsUp size={14} color="var(--status-emerald)" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: '#f8fafc', border: '1px solid #f1f5f9', fontSize: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b' }}>
+            <ThumbsUp size={14} color="#10b981" />
             <span>{faq.helpfulCount || 412} customers found this policy guidance helpful</span>
           </div>
-          <span style={{ color: 'var(--status-emerald)', fontWeight: 600 }}>Verified Policy</span>
+          <span style={{ color: '#16a34a', fontWeight: 600 }}>Verified Policy</span>
         </div>
 
         {/* Related Questions */}
         {faq.relatedQuestions && faq.relatedQuestions.length > 0 && (
           <div>
-            <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', marginBottom: '8px' }}>
               Related Inquiries
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -86,25 +86,25 @@ export default function FAQDetailModal({ faq, onClose, onSelectRelated }) {
                     justifyContent: 'space-between',
                     padding: '8px 12px',
                     borderRadius: 'var(--radius-sm)',
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid var(--glass-border)',
-                    color: 'var(--text-secondary)',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    color: '#334155',
                     fontSize: '12px',
                     textAlign: 'left',
                     cursor: 'pointer',
                     transition: 'all var(--transition-fast)'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 242, 254, 0.05)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
+                    e.currentTarget.style.background = '#f1f5f9';
+                    e.currentTarget.style.color = '#0f172a';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                    e.currentTarget.style.color = 'var(--text-secondary)';
+                    e.currentTarget.style.background = '#f8fafc';
+                    e.currentTarget.style.color = '#334155';
                   }}
                 >
                   <span>{q}</span>
-                  <ArrowRight size={13} color="var(--accent-cyan)" />
+                  <ArrowRight size={13} color="#0f172a" />
                 </button>
               ))}
             </div>
@@ -112,7 +112,7 @@ export default function FAQDetailModal({ faq, onClose, onSelectRelated }) {
         )}
 
         {/* Modal Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid var(--glass-border)' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid #e2e8f0' }}>
           <button className="btn btn-secondary" onClick={onClose}>
             Close Knowledge Article
           </button>
