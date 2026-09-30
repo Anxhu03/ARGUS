@@ -4,233 +4,169 @@ import {
   Search,
   Bell,
   Menu,
-  Shield,
-  Activity,
-  ArrowRight,
+  ChevronDown,
+  Cpu,
+  Layers,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
   ExternalLink,
   HelpCircle,
-  Sparkles
+  FolderGit2,
+  GitBranch,
+  BrainCircuit,
+  Network,
+  Settings,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function TopBar({ onToggleMobile }) {
   const { currentView, setCurrentView, navigateToCase, navigateToSupport, kpis, addToast } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
-  // Page titles and contextual descriptions
-  const titles = {
-    dashboard: {
-      title: 'Operational Intelligence Overview',
-      subtitle: 'Real-time telemetry across multi-agent investigations, auto-resolutions, and platform anomalies'
-    },
-    cases: {
-      title: 'Support Cases & Investigations',
-      subtitle: 'Audit, triage, and inspect customer complaints under active diagnostic flows'
-    },
-    'case-detail': {
-      title: 'Investigation Deep-Dive',
-      subtitle: 'Multi-agent consensus, cryptographic evidence matrix, and automated root cause analysis'
-    },
-    support: {
-      title: 'Support Intelligence Hub',
-      subtitle: 'Dual Portal: Instant Knowledge-Base FAQ retrieval & Autonomous ARGUS Investigation launcher'
-    },
-    intelligence: {
-      title: 'Customer Case Memory & Reliability',
-      subtitle: 'Historic complaint patterns, evidence consistency metrics, and longitudinal reliability indexing'
-    },
-    patterns: {
-      title: 'Pattern Detection & Systemic Prevention',
-      subtitle: 'Cross-dimensional anomalies across merchants, logistics partners, and software components'
-    },
-    settings: {
-      title: 'System Settings & Agent Tuning',
-      subtitle: 'Threshold configuration, consensus weights, and gateway mock orchestration'
-    }
+  const navLinks = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'cases', label: 'Cases', icon: FolderGit2, badge: kpis?.activeCases || '18' },
+    { id: 'case-detail', label: 'Investigations', icon: GitBranch, badge: 'Live' },
+    { id: 'support', label: 'Support', icon: HelpCircle },
+    { id: 'intelligence', label: 'Intelligence', icon: BrainCircuit },
+    { id: 'patterns', label: 'Patterns', icon: Network, badge: kpis?.patternsDetected || '4' },
+    { id: 'settings', label: 'Settings', icon: Settings }
+  ];
+
+  const handleNavClick = (id) => {
+    setCurrentView(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const currentMeta = titles[currentView] || titles.dashboard;
 
   const handleQuickSearch = (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
     const q = searchQuery.trim().toUpperCase();
-    if (q.startsWith('ARG-') || q.startsWith('ORD-')) {
-      navigateToCase('ARG-1042');
+    if (q.startsWith('ARG-') || q.startsWith('ORD-') || q === '1042' || q === '1043') {
+      const targetId = q.includes('1043') ? 'ARG-1043' : 'ARG-1042';
+      navigateToCase(targetId);
       addToast({
         type: 'info',
-        title: 'Quick Navigate',
-        message: `Navigated to target investigation matching "${searchQuery}".`
+        title: 'Investigation Loaded',
+        message: `Navigated to case ${targetId}.`
       });
     } else {
       setCurrentView('cases');
       addToast({
         type: 'info',
-        title: 'Filter Applied',
-        message: `Searching cases matching "${searchQuery}".`
+        title: 'Cases Filtered',
+        message: `Searching records matching "${searchQuery}".`
       });
     }
   };
 
   return (
-    <header
-      style={{
-        height: 'var(--topbar-height)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 800,
-        background: 'rgba(7, 10, 18, 0.75)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--glass-border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 28px',
-        gap: '20px'
-      }}
-    >
-      {/* Mobile Toggle & Page Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <header className="ref-header">
+      {/* Brand Logo (Left) */}
+      <div className="ref-header-left">
         <button
-          className="btn btn-ghost"
-          style={{ display: 'none', padding: '8px' }}
-          id="mobile-nav-toggle"
+          className="ref-mobile-toggle"
           onClick={onToggleMobile}
           aria-label="Toggle navigation menu"
         >
           <Menu size={20} />
         </button>
 
-        <div>
-          <h1
-            style={{
-              fontSize: '18px',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.2
-            }}
-          >
-            {currentMeta.title}
-          </h1>
-          <p
-            style={{
-              fontSize: '12px',
-              color: 'var(--text-muted)',
-              marginTop: '2px',
-              maxWidth: '650px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            {currentMeta.subtitle}
-          </p>
+        <div
+          className="ref-brand"
+          onClick={() => handleNavClick('dashboard')}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="ref-logo-icon">
+            <div className="logo-bar bar-1"></div>
+            <div className="logo-bar bar-2"></div>
+            <div className="logo-bar bar-3"></div>
+          </div>
+          <div className="ref-brand-text">
+            <span className="brand-name">ARGUS</span>
+            <span className="brand-badge">AI Platform</span>
+          </div>
         </div>
       </div>
 
-      {/* Right Controls: Search, System Badge, Notifications */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      {/* Pill Navigation (Center - Reference signature style) */}
+      <nav className="ref-nav-pill-wrapper">
+        <div className="ref-nav-pill-container">
+          {navLinks.map((link) => {
+            const isActive = currentView === link.id || (link.id === 'case-detail' && currentView === 'investigations');
+            return (
+              <button
+                key={link.id}
+                className={`ref-pill-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavClick(link.id)}
+              >
+                <span>{link.label}</span>
+                {link.badge && (
+                  <span className={`ref-pill-badge ${isActive ? 'badge-active' : ''}`}>
+                    {link.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Right Controls: Status Pill, Search, Notification & Operator Avatar */}
+      <div className="ref-header-right">
+        {/* Live Multi-Agent Telemetry Status */}
+        <div className="ref-agent-pulse-pill" title="Billing, Order, Technical & Coordinator Agents Synced">
+          <span className="pulse-indicator-dot"></span>
+          <span className="pulse-text">4 Agents Active</span>
+        </div>
+
         {/* Quick Search */}
-        <form onSubmit={handleQuickSearch} style={{ position: 'relative', width: '240px' }}>
-          <Search
-            size={15}
-            style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--text-muted)',
-              pointerEvents: 'none'
-            }}
-          />
+        <form onSubmit={handleQuickSearch} className="ref-search-form">
+          <Search size={14} className="search-icon" />
           <input
             type="text"
-            className="input-field"
+            className="ref-search-input"
             placeholder="Search Case, Order, or SKU..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              paddingLeft: '34px',
-              paddingRight: '12px',
-              height: '36px',
-              fontSize: '12px',
-              borderRadius: 'var(--radius-full)'
-            }}
           />
         </form>
 
-        {/* Live Multi-Agent Status Pill */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(0, 242, 254, 0.06)',
-            border: '1px solid rgba(0, 242, 254, 0.25)',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: 'var(--accent-cyan)'
-          }}
-        >
-          <span
-            style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: 'var(--accent-cyan)',
-              boxShadow: '0 0 8px var(--accent-cyan)',
-              animation: 'pulse-ring 2s infinite'
+        {/* Notification Bell */}
+        <div className="relative-container">
+          <button
+            className="ref-icon-button"
+            onClick={() => {
+              setNotifOpen(!notifOpen);
+              addToast({
+                type: 'info',
+                title: 'Live Event Stream',
+                message: 'Stripe Gateway & Kafka DLQ monitors synchronized. Latency 14ms.'
+              });
             }}
-          />
-          <span>4 AGENTS ACTIVE</span>
+            aria-label="Notifications"
+          >
+            <Bell size={18} />
+            <span className="ref-notif-dot"></span>
+          </button>
         </div>
 
-        {/* Support Entry Button */}
-        <button
-          className="btn btn-secondary btn-sm"
-          style={{ gap: '6px' }}
-          onClick={() => navigateToSupport('faq')}
-          title="Open Support & FAQ Knowledge Base"
-        >
-          <HelpCircle size={15} color="var(--accent-cyan)" />
-          <span>Support Portal</span>
-        </button>
-
-        {/* Notifications Alert */}
-        <button
-          className="btn btn-ghost"
-          style={{
-            padding: '8px',
-            borderRadius: 'var(--radius-md)',
-            position: 'relative'
-          }}
-          onClick={() => {
-            addToast({
-              type: 'info',
-              title: 'System Event Stream',
-              message: 'Kafka message bus operating at nominal latency (12ms). Zero packet drops detected.'
-            });
-          }}
-          aria-label="View system notifications"
-        >
-          <Bell size={18} color="var(--text-secondary)" />
-          <span
-            style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '7px',
-              height: '7px',
-              borderRadius: '50%',
-              background: 'var(--accent-cyan)',
-              boxShadow: '0 0 6px var(--accent-cyan)'
-            }}
-          />
-        </button>
+        {/* Operator Profile */}
+        <div className="ref-profile-trigger" onClick={() => setProfileOpen(!profileOpen)}>
+          <div className="ref-avatar">
+            <span>AV</span>
+          </div>
+          <div className="ref-user-info">
+            <p className="user-name">Alex Vance</p>
+            <p className="user-role">Lead Investigator</p>
+          </div>
+          <ChevronDown size={14} className="chevron-icon" />
+        </div>
       </div>
     </header>
   );
