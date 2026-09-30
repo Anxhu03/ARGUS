@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import GlassCard from '../common/GlassCard';
 import StatusBadge from '../common/StatusBadge';
 import {
   FileText,
@@ -14,20 +13,22 @@ import {
   ChevronDown,
   ChevronUp,
   Copy,
-  Check
+  Check,
+  Filter
 } from 'lucide-react';
 
 export default function EvidenceMatrix({ evidence = [] }) {
   const [expandedId, setExpandedId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const getEvidenceIcon = (type = '') => {
     const t = type.toLowerCase();
-    if (t.includes('financial') || t.includes('payment')) return CreditCard;
-    if (t.includes('database')) return Database;
-    if (t.includes('log') || t.includes('queue')) return Terminal;
-    if (t.includes('spatial') || t.includes('gis') || t.includes('carrier')) return MapPin;
-    if (t.includes('vision') || t.includes('camera') || t.includes('photo')) return Camera;
+    if (t.includes('financial') || t.includes('payment') || t.includes('stripe')) return CreditCard;
+    if (t.includes('database') || t.includes('oms') || t.includes('order')) return Database;
+    if (t.includes('log') || t.includes('queue') || t.includes('kafka') || t.includes('trace')) return Terminal;
+    if (t.includes('spatial') || t.includes('gis') || t.includes('carrier') || t.includes('delivery')) return MapPin;
+    if (t.includes('vision') || t.includes('camera') || t.includes('photo') || t.includes('upload')) return Camera;
     return FileText;
   };
 
@@ -37,36 +38,59 @@ export default function EvidenceMatrix({ evidence = [] }) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const filteredEvidence = statusFilter === 'all'
+    ? evidence
+    : evidence.filter(ev => ev.status.toLowerCase() === statusFilter.toLowerCase());
+
+  const statePills = [
+    { value: 'all', label: 'All Artifacts' },
+    { value: 'verified', label: 'Verified' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'conflicting', label: 'Conflicting' },
+    { value: 'unavailable', label: 'Unavailable' }
+  ];
+
   return (
-    <GlassCard style={{ padding: '24px' }}>
+    <div className="ref-card" style={{ padding: '24px' }}>
       {/* Panel Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FileText size={18} color="var(--accent-cyan)" />
-            <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Cryptographic & System Evidence Matrix</h3>
+            <FileText size={18} color="#0284c7" />
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>Verifiable Cryptographic & Telemetry Evidence Matrix</h3>
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Multi-source verifiable artifacts ingested during autonomous triage
+          <p style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+            Multi-source verifiable artifacts ingested during autonomous triage across Payment, OMS, and Carrier gateways
           </p>
         </div>
 
-        <span
-          style={{
-            fontSize: '11px',
-            padding: '3px 8px',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(255, 255, 255, 0.05)',
-            color: 'var(--text-secondary)'
-          }}
-        >
-          {evidence.length} Evidence Artifacts Captured
-        </span>
+        {/* Filter Pills */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', padding: '3px', borderRadius: '8px' }}>
+          {statePills.map(sp => (
+            <button
+              key={sp.value}
+              onClick={() => setStatusFilter(sp.value)}
+              style={{
+                border: 'none',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: statusFilter === sp.value ? '#ffffff' : 'transparent',
+                color: statusFilter === sp.value ? '#0f172a' : '#64748b',
+                boxShadow: statusFilter === sp.value ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
+              }}
+            >
+              {sp.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Evidence Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '14px' }}>
-        {evidence.map((ev) => {
+        {filteredEvidence.map((ev) => {
           const Icon = getEvidenceIcon(ev.type);
           const isExpanded = expandedId === ev.id;
           const isConflicting = ev.status === 'Conflicting';
@@ -75,14 +99,23 @@ export default function EvidenceMatrix({ evidence = [] }) {
             <div
               key={ev.id}
               style={{
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(10, 16, 28, 0.65)',
-                border: `1px solid ${isConflicting ? 'var(--status-rose-border)' : 'var(--glass-border)'}`,
+                borderRadius: '8px',
+                background: '#ffffff',
+                border: `1px solid ${isConflicting ? '#fca5a5' : '#e2e8f0'}`,
                 padding: '16px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '10px',
-                transition: 'border-color var(--transition-fast)'
+                boxShadow: isConflicting ? '0 0 12px rgba(239, 68, 68, 0.1)' : '0 1px 3px rgba(0,0,0,0.03)',
+                borderLeft: `4px solid ${
+                  ev.status === 'Verified'
+                    ? '#16a34a'
+                    : ev.status === 'Conflicting'
+                      ? '#dc2626'
+                      : ev.status === 'Pending'
+                        ? '#ea580c'
+                        : '#64748b'
+                }`
               }}
             >
               {/* Top Row: Type & Verification Status */}
@@ -90,19 +123,19 @@ export default function EvidenceMatrix({ evidence = [] }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div
                     style={{
-                      padding: '5px',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'rgba(0, 242, 254, 0.08)',
-                      color: isConflicting ? 'var(--status-rose)' : 'var(--accent-cyan)'
+                      padding: '6px',
+                      borderRadius: '6px',
+                      background: isConflicting ? '#fee2e2' : '#e0f2fe',
+                      color: isConflicting ? '#dc2626' : '#0284c7'
                     }}
                   >
                     <Icon size={16} />
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>
                       {ev.type}
                     </span>
-                    <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-faint)' }}>
+                    <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#94a3b8' }}>
                       {ev.id}
                     </div>
                   </div>
@@ -113,18 +146,18 @@ export default function EvidenceMatrix({ evidence = [] }) {
 
               {/* Title & Description */}
               <div>
-                <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '4px' }}>
                   {ev.title}
                 </h4>
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                <p style={{ fontSize: '12px', color: '#475569', lineHeight: 1.4 }}>
                   {ev.description}
                 </p>
               </div>
 
               {/* Source & Timestamp Meta */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                <span>Source: <strong style={{ color: 'var(--text-secondary)' }}>{ev.source}</strong></span>
-                <span style={{ fontFamily: 'var(--font-mono)' }}>{ev.timestamp}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: '#64748b', paddingTop: '6px', borderTop: '1px solid #f1f5f9' }}>
+                <span>Source: <strong style={{ color: '#0f172a' }}>{ev.source}</strong></span>
+                <span style={{ fontFamily: 'var(--font-mono)', color: '#94a3b8' }}>{ev.timestamp}</span>
               </div>
 
               {/* Expandable Raw Payload View */}
@@ -134,11 +167,11 @@ export default function EvidenceMatrix({ evidence = [] }) {
                     onClick={() => setExpandedId(isExpanded ? null : ev.id)}
                     style={{
                       width: '100%',
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid var(--glass-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      padding: '5px 10px',
-                      color: 'var(--text-muted)',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      color: '#64748b',
                       fontSize: '11px',
                       cursor: 'pointer',
                       display: 'flex',
@@ -155,15 +188,15 @@ export default function EvidenceMatrix({ evidence = [] }) {
                     <div style={{ position: 'relative', marginTop: '8px' }}>
                       <pre
                         style={{
-                          background: '#040711',
+                          background: '#0f172a',
                           padding: '10px',
-                          borderRadius: 'var(--radius-sm)',
+                          borderRadius: '6px',
                           fontSize: '11px',
                           fontFamily: 'var(--font-mono)',
-                          color: 'var(--accent-cyan)',
+                          color: '#38bdf8',
                           overflowX: 'auto',
                           maxHeight: '140px',
-                          border: '1px solid rgba(0, 242, 254, 0.15)'
+                          border: '1px solid #1e293b'
                         }}
                       >
                         {JSON.stringify(ev.payload, null, 2)}
@@ -174,11 +207,11 @@ export default function EvidenceMatrix({ evidence = [] }) {
                           position: 'absolute',
                           top: '6px',
                           right: '6px',
-                          background: 'rgba(255, 255, 255, 0.1)',
+                          background: 'rgba(255, 255, 255, 0.15)',
                           border: 'none',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: '4px 6px',
-                          color: '#fff',
+                          borderRadius: '4px',
+                          padding: '3px 6px',
+                          color: '#ffffff',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -186,7 +219,7 @@ export default function EvidenceMatrix({ evidence = [] }) {
                           fontSize: '10px'
                         }}
                       >
-                        {copiedId === ev.id ? <Check size={11} color="var(--status-emerald)" /> : <Copy size={11} />}
+                        {copiedId === ev.id ? <Check size={11} color="#4ade80" /> : <Copy size={11} />}
                         <span>{copiedId === ev.id ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
@@ -197,6 +230,6 @@ export default function EvidenceMatrix({ evidence = [] }) {
           );
         })}
       </div>
-    </GlassCard>
+    </div>
   );
 }

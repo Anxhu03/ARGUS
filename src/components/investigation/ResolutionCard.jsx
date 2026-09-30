@@ -1,5 +1,4 @@
 import React from 'react';
-import GlassCard from '../common/GlassCard';
 import {
   CheckCircle2,
   Send,
@@ -16,75 +15,76 @@ export default function ResolutionCard({ resolution, onExecute, caseStatus }) {
   const isResolved = caseStatus === 'Resolved';
 
   return (
-    <GlassCard
+    <div
+      className="ref-card"
       style={{
-        padding: '24px',
-        border: '1px solid rgba(16, 185, 129, 0.4)',
-        background: 'linear-gradient(135deg, rgba(12, 28, 22, 0.85) 0%, rgba(10, 16, 28, 0.9) 100%)',
-        boxShadow: '0 0 30px rgba(16, 185, 129, 0.12)'
+        padding: '22px 24px',
+        border: '1px solid #bbf7d0',
+        background: '#f0fdf4',
+        borderLeft: '5px solid #16a34a'
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.35)',
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: '#dcfce7',
+              border: '1px solid #bbf7d0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--status-emerald)',
+              color: '#15803d',
               flexShrink: 0
             }}
           >
-            <CheckCircle2 size={22} />
+            <CheckCircle2 size={20} />
           </div>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-emerald)', letterSpacing: '0.06em' }}>
+            <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#15803d', letterSpacing: '0.06em' }}>
               Actionable Resolution Plan
             </span>
-            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#14532d', marginTop: '2px' }}>
               {resolution.headline}
             </h3>
           </div>
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Confidence Score</div>
-          <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--status-emerald)' }}>
+          <div style={{ fontSize: '11px', color: '#64748b' }}>Confidence Score</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: '#15803d' }}>
             {resolution.confidenceScore}%
           </div>
         </div>
       </div>
 
       {/* Rationalization */}
-      <div style={{ marginBottom: '16px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#166534' }}>
           Autonomous Triage Rationale
         </span>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '12px', color: '#1e293b', marginTop: '4px', lineHeight: 1.5 }}>
           {resolution.reason}
         </p>
       </div>
 
       {/* Customer-Facing Response Draft */}
-      <div style={{ marginBottom: '20px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent-cyan)' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#0284c7' }}>
           Generated Customer Notification
         </span>
         <div
           style={{
             marginTop: '6px',
-            padding: '14px 16px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(5, 8, 15, 0.8)',
-            border: '1px solid var(--glass-border)',
-            fontSize: '13px',
-            color: 'var(--text-primary)',
+            padding: '12px 14px',
+            borderRadius: '6px',
+            background: '#ffffff',
+            border: '1px solid #bbf7d0',
+            fontSize: '12px',
+            color: '#0f172a',
             lineHeight: 1.6,
             fontFamily: 'var(--font-body)'
           }}
@@ -95,44 +95,35 @@ export default function ResolutionCard({ resolution, onExecute, caseStatus }) {
 
       {/* Internal Automated Actions */}
       <div>
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#166534', marginBottom: '8px', display: 'block' }}>
           Automated System Interventions
         </span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {resolution.internalActions?.map((act) => (
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '8px' }}>
+          {resolution.automatedActions?.map((act, i) => (
             <div
-              key={act.id}
+              key={i}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '10px 14px',
-                borderRadius: 'var(--radius-sm)',
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--glass-border)',
-                fontSize: '12px'
+                gap: '8px',
+                padding: '10px 12px',
+                borderRadius: '6px',
+                background: '#ffffff',
+                border: '1px solid #bbf7d0',
+                fontSize: '11px',
+                color: '#14532d'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Zap size={14} color="var(--status-emerald)" />
-                <span style={{ color: 'var(--text-primary)' }}>{act.title}</span>
-              </div>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: act.status === 'Executed' || isResolved ? 'rgba(16, 185, 129, 0.15)' : 'rgba(0, 242, 254, 0.15)',
-                  color: act.status === 'Executed' || isResolved ? 'var(--status-emerald)' : 'var(--accent-cyan)'
-                }}
-              >
-                {isResolved ? 'Executed' : act.status}
+              <Zap size={14} color="#16a34a" style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1, fontWeight: 500 }}>{act}</span>
+              <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 5px', borderRadius: '4px', background: '#dcfce7', color: '#15803d' }}>
+                READY
               </span>
             </div>
           ))}
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }

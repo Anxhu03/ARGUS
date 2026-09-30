@@ -1,12 +1,12 @@
 import React from 'react';
-import GlassCard from '../common/GlassCard';
 import {
   AlertTriangle,
   UserCheck,
   ShieldAlert,
   ArrowRight,
   FileText,
-  Sliders
+  Sliders,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function EscalationCard({ escalation, onAction }) {
@@ -15,40 +15,37 @@ export default function EscalationCard({ escalation, onAction }) {
   const isCritical = escalation.riskLevel === 'Critical';
 
   return (
-    <GlassCard
+    <div
+      className="ref-card"
       style={{
-        padding: '24px',
-        border: `1px solid ${isCritical ? 'var(--status-rose-border)' : 'var(--status-amber-border)'}`,
-        background: isCritical
-          ? 'linear-gradient(135deg, rgba(30, 12, 18, 0.85) 0%, rgba(10, 16, 28, 0.9) 100%)'
-          : 'linear-gradient(135deg, rgba(30, 22, 10, 0.85) 0%, rgba(10, 16, 28, 0.9) 100%)',
-        boxShadow: isCritical
-          ? '0 0 30px rgba(244, 63, 94, 0.15)'
-          : '0 0 30px rgba(245, 158, 11, 0.15)'
+        padding: '22px 24px',
+        border: `1px solid ${isCritical ? '#fecdd3' : '#fed7aa'}`,
+        background: isCritical ? '#fff1f2' : '#fffbeb',
+        borderLeft: `5px solid ${isCritical ? '#dc2626' : '#ea580c'}`
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: 'var(--radius-md)',
-              background: isCritical ? 'rgba(244, 63, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-              border: `1px solid ${isCritical ? 'rgba(244, 63, 94, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: isCritical ? '#fee2e2' : '#ffedd5',
+              border: `1px solid ${isCritical ? '#fecdd3' : '#fed7aa'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)',
+              color: isCritical ? '#dc2626' : '#ea580c',
               flexShrink: 0
             }}
           >
-            <ShieldAlert size={22} />
+            <ShieldAlert size={20} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)', letterSpacing: '0.06em' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: isCritical ? '#dc2626' : '#ea580c', letterSpacing: '0.06em' }}>
                 Human Review Escalation Required
               </span>
               <span
@@ -56,16 +53,16 @@ export default function EscalationCard({ escalation, onAction }) {
                   fontSize: '10px',
                   fontWeight: 700,
                   padding: '2px 7px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: isCritical ? 'var(--status-rose-bg)' : 'var(--status-amber-bg)',
-                  color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)',
+                  borderRadius: '4px',
+                  background: isCritical ? '#fee2e2' : '#ffedd5',
+                  color: isCritical ? '#dc2626' : '#ea580c',
                   textTransform: 'uppercase'
                 }}
               >
                 {escalation.riskLevel} Risk
               </span>
             </div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
               Specialist Review Triggered by Policy Threshold
             </h3>
           </div>
@@ -73,8 +70,8 @@ export default function EscalationCard({ escalation, onAction }) {
 
         {escalation.assignedSpecialist && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Assigned Tier</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '10px', color: '#64748b' }}>Assigned Specialist</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
               {escalation.assignedSpecialist}
             </div>
           </div>
@@ -82,11 +79,11 @@ export default function EscalationCard({ escalation, onAction }) {
       </div>
 
       {/* Escalation Reason */}
-      <div style={{ marginBottom: '16px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b' }}>
           Policy Trigger & Evidence Discrepancy
         </span>
-        <p style={{ fontSize: '13px', color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '12px', color: '#334155', marginTop: '4px', lineHeight: 1.5 }}>
           {escalation.reason}
         </p>
       </div>
@@ -94,52 +91,48 @@ export default function EscalationCard({ escalation, onAction }) {
       {/* Recommended Action */}
       <div
         style={{
-          padding: '12px 16px',
-          borderRadius: 'var(--radius-md)',
-          background: 'rgba(0, 0, 0, 0.3)',
-          border: '1px solid var(--glass-border)',
-          marginBottom: '18px'
+          padding: '10px 14px',
+          borderRadius: '6px',
+          background: '#ffffff',
+          border: '1px solid #fed7aa',
+          fontSize: '12px',
+          color: '#7c2d12',
+          marginBottom: '16px'
         }}
       >
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent-cyan)' }}>
-          Recommended Human Action
-        </span>
-        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>
-          {escalation.recommendedAction}
-        </p>
+        <strong>Recommended Specialist Action: </strong>
+        {escalation.recommendedAction}
       </div>
 
-      {/* Enterprise Review Controls */}
-      <div>
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '8px', display: 'block' }}>
-          Human Specialist Review Controls
-        </span>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() => onAction && onAction('approve_override')}
-          >
-            <UserCheck size={14} />
-            <span>Approve Specialist Override</span>
-          </button>
+      {/* Specialist Action Buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        <button
+          className="btn btn-primary btn-sm"
+          style={{ height: '34px', background: '#16a34a', borderColor: '#15803d' }}
+          onClick={() => onAction('approve_override')}
+        >
+          <CheckCircle2 size={14} />
+          <span>Approve Override & Mark Resolved</span>
+        </button>
 
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => onAction && onAction('request_evidence')}
-          >
-            <FileText size={14} />
-            <span>Request Certified Proof Upload</span>
-          </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          style={{ height: '34px' }}
+          onClick={() => onAction('request_evidence')}
+        >
+          <FileText size={14} />
+          <span>Request Certified Customer Proof</span>
+        </button>
 
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => onAction && onAction('formal_dispute')}
-          >
-            <AlertTriangle size={14} />
-            <span>Initiate Formal Carrier Dispute</span>
-          </button>
-        </div>
+        <button
+          className="btn btn-secondary btn-sm"
+          style={{ height: '34px', color: '#ea580c', borderColor: '#fed7aa' }}
+          onClick={() => onAction('formal_dispute')}
+        >
+          <AlertTriangle size={14} />
+          <span>Open Carrier Insurance Dispute</span>
+        </button>
       </div>
-    </GlassCard>
+    </div>
   );
 }

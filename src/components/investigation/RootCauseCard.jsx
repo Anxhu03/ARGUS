@@ -1,60 +1,61 @@
 import React from 'react';
-import GlassCard from '../common/GlassCard';
 import {
   GitCommit,
   ArrowRight,
   CheckCircle2,
   AlertCircle,
   Cpu,
-  Layers
+  Layers,
+  Sparkles
 } from 'lucide-react';
 
 export default function RootCauseCard({ rootCause }) {
   if (!rootCause) return null;
 
   return (
-    <GlassCard
+    <div
+      className="ref-card"
       style={{
-        padding: '24px',
-        border: '1px solid rgba(139, 92, 246, 0.4)',
-        background: 'linear-gradient(135deg, rgba(20, 16, 38, 0.8) 0%, rgba(10, 16, 28, 0.9) 100%)',
-        boxShadow: '0 0 30px rgba(139, 92, 246, 0.12)'
+        padding: '22px 24px',
+        border: '1px solid #e9d5ff',
+        background: '#faf5ff',
+        borderLeft: '5px solid #7e22ce'
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
         <div
           style={{
             width: '36px',
             height: '36px',
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(139, 92, 246, 0.15)',
-            border: '1px solid rgba(139, 92, 246, 0.35)',
+            borderRadius: '8px',
+            background: '#f3e8ff',
+            border: '1px solid #e9d5ff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'var(--status-purple)'
+            color: '#7e22ce'
           }}
         >
           <GitCommit size={20} />
         </div>
         <div>
-          <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-purple)', letterSpacing: '0.06em' }}>
+          <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#7e22ce', letterSpacing: '0.06em' }}>
             Root Cause Diagnosis
           </span>
-          <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#581c87', marginTop: '2px' }}>
             {rootCause.headline}
           </h3>
         </div>
       </div>
 
-      <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '20px' }}>
+      <p style={{ fontSize: '13px', color: '#4c1d95', lineHeight: 1.6, marginBottom: '18px' }}>
         {rootCause.summary}
       </p>
 
       {/* Visual Chain: Evidence -> Findings -> Root Cause */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em', marginBottom: '10px' }}>
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#6b21a8', letterSpacing: '0.05em', marginBottom: '8px' }}>
           Deterministic Diagnostic Chain (Evidence → Finding → Root Cause)
         </div>
 
@@ -62,7 +63,7 @@ export default function RootCauseCard({ rootCause }) {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '12px',
+            gap: '10px',
             position: 'relative'
           }}
         >
@@ -70,25 +71,26 @@ export default function RootCauseCard({ rootCause }) {
             <div
               key={idx}
               style={{
-                padding: '14px 16px',
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(10, 15, 26, 0.8)',
-                border: '1px solid var(--glass-border)',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                background: '#ffffff',
+                border: '1px solid #e9d5ff',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '6px',
-                position: 'relative'
+                gap: '4px',
+                position: 'relative',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: idx === 2 ? 'var(--status-purple)' : 'var(--accent-cyan)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: idx === 2 ? '#7e22ce' : '#0284c7', textTransform: 'uppercase' }}>
                   {link.label}
                 </span>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: '#94a3b8' }}>
                   Step 0{idx + 1}
                 </span>
               </div>
-              <p style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+              <p style={{ fontSize: '12px', color: '#1e293b', lineHeight: 1.4 }}>
                 {link.text}
               </p>
             </div>
@@ -100,21 +102,24 @@ export default function RootCauseCard({ rootCause }) {
       {rootCause.impact && (
         <div
           style={{
+            padding: '10px 14px',
+            borderRadius: '6px',
+            background: '#ffffff',
+            border: '1px solid #e9d5ff',
+            fontSize: '11px',
+            color: '#6b21a8',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
-            padding: '10px 14px',
-            borderRadius: 'var(--radius-sm)',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: '1px solid var(--glass-border)',
-            fontSize: '12px',
-            color: 'var(--text-muted)'
+            gap: '8px'
           }}
         >
-          <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>System Impact:</span>
-          <span>{rootCause.impact}</span>
+          <Cpu size={14} color="#7e22ce" style={{ flexShrink: 0 }} />
+          <span>
+            <strong>System Impact: </strong>
+            {rootCause.impact}
+          </span>
         </div>
       )}
-    </GlassCard>
+    </div>
   );
 }
