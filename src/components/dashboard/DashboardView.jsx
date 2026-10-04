@@ -3,29 +3,23 @@ import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
 import StatusBadge from '../common/StatusBadge';
 import LoadingState from '../common/LoadingState';
+import Badge from '../common/Badge';
 import {
   FolderGit2,
   CheckCircle2,
   Cpu,
-  AlertTriangle,
   GitBranch,
   ShieldAlert,
   ArrowRight,
   Sparkles,
-  Zap,
-  Activity,
   Calendar,
   Upload,
   Clock,
-  ExternalLink,
-  ShieldCheck,
-  Search,
-  Filter,
-  Layers,
-  FileCheck2,
-  Check,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  FileCheck2,
+  Layers,
+  Info
 } from 'lucide-react';
 
 export default function DashboardView() {
@@ -60,7 +54,7 @@ export default function DashboardView() {
         ? cases.filter(c => c.status === 'Contradiction Detected')
         : cases.filter(c => c.status === 'Resolved');
 
-  // Daily Chart Data for Case Velocity (Mon - Sun)
+  // 7-Day Chart Data for Case Velocity (Mon - Sun)
   const chartDays = [
     { day: 'Mon', ingested: 42, resolved: 38, contradiction: 2, amount: '$14,200' },
     { day: 'Tue', ingested: 58, resolved: 54, contradiction: 3, amount: '$18,900' },
@@ -73,29 +67,53 @@ export default function DashboardView() {
 
   // Recent investigation live activity stream items
   const activityStream = [
-    { id: 1, type: 'classified', text: 'Case ARG-1042 classified as "Billing & Order Sync"', time: '2m ago', icon: FolderGit2, color: '#0284c7' },
-    { id: 2, type: 'agent_start', text: 'Billing Agent queried Stripe ledger: ch_3M4zZ8891 confirmed', time: '3m ago', icon: Cpu, color: '#16a34a' },
-    { id: 3, type: 'evidence', text: 'Carrier FastTrack e-POD with geofence retrieved for ORD-99124', time: '8m ago', icon: FileCheck2, color: '#0284c7' },
-    { id: 4, type: 'contradiction', text: 'Contradiction detected: Customer denial vs Physical delivery scan', time: '14m ago', icon: ShieldAlert, color: '#ea580c' },
-    { id: 5, type: 'root_cause', text: 'Root cause isolated: Ingress Kafka 504 drops on pod restart', time: '22m ago', icon: AlertCircle, color: '#7e22ce' },
-    { id: 6, type: 'resolution', text: 'Automated DLQ replay & refund voucher generated for ARG-1042', time: '35m ago', icon: CheckCircle2, color: '#16a34a' },
-    { id: 7, type: 'escalation', text: 'Human specialist review requested: High-value enterprise tier', time: '1h ago', icon: AlertTriangle, color: '#ea580c' }
+    { id: 1, text: 'Case ARG-1042 classified as "Billing & Order Sync"', time: '2m ago', icon: FolderGit2, color: 'var(--accent-cyan)' },
+    { id: 2, text: 'Billing Agent queried Stripe ledger: ch_3M4zZ8891 confirmed', time: '3m ago', icon: Cpu, color: 'var(--status-emerald)' },
+    { id: 3, text: 'Carrier FastTrack e-POD with geofence retrieved for ORD-99124', time: '8m ago', icon: FileCheck2, color: 'var(--accent-cyan)' },
+    { id: 4, text: 'Contradiction detected: Customer denial vs Physical delivery scan', time: '14m ago', icon: ShieldAlert, color: 'var(--status-amber)' },
+    { id: 5, text: 'Root cause isolated: Ingress Kafka 504 drops on pod restart', time: '22m ago', icon: AlertCircle, color: 'var(--status-purple)' },
+    { id: 6, text: 'Automated DLQ replay & voucher generated for ARG-1042', time: '35m ago', icon: CheckCircle2, color: 'var(--status-emerald)' }
   ];
+
+  if (loading) {
+    return <LoadingState message="Connecting to ARGUS Investigation Layer..." />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* 1. Subheader Row matching Reference */}
+      {/* Informational Prototype Banner */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          padding: '10px 16px',
+          borderRadius: 'var(--radius-md)',
+          background: 'rgba(6, 182, 212, 0.08)',
+          border: '1px solid rgba(6, 182, 212, 0.22)',
+          fontSize: '12px',
+          color: 'var(--text-secondary)'
+        }}
+      >
+        <Info size={16} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />
+        <span style={{ flex: 1 }}>
+          <strong style={{ color: 'var(--accent-cyan)' }}>Phase 2 Design System Preview:</strong>{' '}
+          Showing verified UI layout and design tokens. All metrics below represent simulated cluster data until live backend integration in Milestone 2.
+        </span>
+        <Badge variant="cyan" size="sm">Design System Active</Badge>
+      </div>
+
+      {/* 1. Subheader Row */}
       <div className="ref-subheader">
         <div className="ref-title-group">
-          <h1>Welcome, Operations Lead 👋</h1>
-          <p>AI-powered customer-support investigation, multi-agent dispute diagnostics, and fraud intelligence platform.</p>
+          <h1>Operations Intelligence Overview</h1>
+          <p>Autonomous customer dispute diagnostics, multi-agent evidence verification, and fraud intelligence.</p>
         </div>
 
         <div className="ref-subheader-actions">
           <button
             className="btn btn-secondary btn-sm"
-            style={{ borderRadius: '6px', gap: '6px', height: '36px' }}
-            onClick={() => addToast({ type: 'info', title: 'Date Filter', message: 'Displaying telemetry for current production week.' })}
+            onClick={() => addToast({ type: 'info', title: 'Telemetry Window', message: 'Displaying telemetry for current production week.' })}
           >
             <Calendar size={14} />
             <span>This Week</span>
@@ -103,8 +121,7 @@ export default function DashboardView() {
 
           <button
             className="btn btn-secondary btn-sm"
-            style={{ borderRadius: '6px', gap: '6px', height: '36px' }}
-            onClick={() => addToast({ type: 'info', title: 'Audit Report Exported', message: 'Deterministic trace logs exported to CSV/JSON.' })}
+            onClick={() => addToast({ type: 'info', title: 'Audit Export', message: 'Investigation traces exported to CSV/JSON format.' })}
           >
             <Upload size={14} />
             <span>Export Report</span>
@@ -112,7 +129,6 @@ export default function DashboardView() {
 
           <button
             className="btn btn-primary btn-sm"
-            style={{ borderRadius: '6px', gap: '6px', height: '36px' }}
             onClick={() => navigateToSupport('agent')}
           >
             <Sparkles size={14} />
@@ -121,13 +137,13 @@ export default function DashboardView() {
         </div>
       </div>
 
-      {/* 2. Overview Metrics Cards matching Reference (4 columns) */}
+      {/* 2. Overview Metrics Cards (4 Columns) */}
       <div className="ref-metrics-grid">
-        {/* Card 1: Active Cases */}
+        {/* Placeholder 1: Active Cases */}
         <div
           className="ref-metric-card"
           onClick={() => setCurrentView('cases')}
-          title="Click to view all cases"
+          title="Click to view all active cases"
         >
           <div className="ref-metric-card-top">
             <span className="ref-metric-label">Active Cases</span>
@@ -138,11 +154,11 @@ export default function DashboardView() {
           <div className="ref-metric-value">{kpis?.activeCases || '24'}</div>
           <div className="ref-metric-trend">
             <span className="trend-positive">+2.4% WoW</span>
-            <span style={{ color: '#94a3b8' }}>• 6 incoming</span>
+            <span style={{ color: 'var(--text-faint)' }}>• 6 incoming</span>
           </div>
         </div>
 
-        {/* Card 2: Investigations Running */}
+        {/* Placeholder 2: Investigation Activity / Running DAGs */}
         <div
           className="ref-metric-card"
           onClick={() => navigateToCase('ARG-1042')}
@@ -150,18 +166,18 @@ export default function DashboardView() {
         >
           <div className="ref-metric-card-top">
             <span className="ref-metric-label">Investigations Running</span>
-            <div className="ref-metric-icon-box" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+            <div className="ref-metric-icon-box" style={{ background: 'rgba(6, 182, 212, 0.15)', color: 'var(--accent-cyan)' }}>
               <GitBranch size={16} />
             </div>
           </div>
           <div className="ref-metric-value">{kpis?.investigationsRunning || '8'}</div>
           <div className="ref-metric-trend">
             <span className="trend-neutral">Parallel DAGs Active</span>
-            <span style={{ color: '#94a3b8' }}>• 4 Agents/case</span>
+            <span style={{ color: 'var(--text-faint)' }}>• 4 Agents/case</span>
           </div>
         </div>
 
-        {/* Card 3: Resolved Cases */}
+        {/* Placeholder 3: Resolved Cases */}
         <div
           className="ref-metric-card"
           onClick={() => {
@@ -172,46 +188,46 @@ export default function DashboardView() {
         >
           <div className="ref-metric-card-top">
             <span className="ref-metric-label">Resolved Cases</span>
-            <div className="ref-metric-icon-box" style={{ background: '#dcfce7', color: '#16a34a' }}>
+            <div className="ref-metric-icon-box" style={{ background: 'var(--status-emerald-bg)', color: 'var(--status-emerald)' }}>
               <CheckCircle2 size={16} />
             </div>
           </div>
           <div className="ref-metric-value">{kpis?.casesResolved || '1,429'}</div>
           <div className="ref-metric-trend">
             <span className="trend-positive">+8.4% WoW</span>
-            <span style={{ color: '#94a3b8' }}>• 98.4% Auto</span>
+            <span style={{ color: 'var(--text-faint)' }}>• 98.4% Auto</span>
           </div>
         </div>
 
-        {/* Card 4: Contradictions Detected */}
+        {/* Placeholder 4: Human Escalations / Contradictions Flagged */}
         <div
           className="ref-metric-card"
           onClick={() => navigateToCase('ARG-1043')}
           title="Click to inspect contradiction evidence"
         >
           <div className="ref-metric-card-top">
-            <span className="ref-metric-label">Contradictions Detected</span>
-            <div className="ref-metric-icon-box" style={{ background: '#ffedd5', color: '#ea580c' }}>
+            <span className="ref-metric-label">Human Escalations</span>
+            <div className="ref-metric-icon-box" style={{ background: 'var(--status-amber-bg)', color: 'var(--status-amber)' }}>
               <ShieldAlert size={16} />
             </div>
           </div>
           <div className="ref-metric-value">{kpis?.contradictionsDetected || '14'}</div>
           <div className="ref-metric-trend">
             <span className="trend-warning">Neutral Conflict Guard</span>
-            <span style={{ color: '#94a3b8' }}>• 0 Fraud labels</span>
+            <span style={{ color: 'var(--text-faint)' }}>• 0 Fraud labels</span>
           </div>
         </div>
       </div>
 
       {/* 3. Main Grid Row 1: 2-Column Chart + 1-Column Active Investigations */}
       <div className="ref-grid-2-1">
-        {/* Left Card (2 cols): Investigation Velocity & Resolution Telemetry */}
+        {/* Left Card: Investigation Velocity & Resolution Telemetry */}
         <div className="ref-card">
           <div className="ref-card-header">
             <div>
               <div className="ref-card-title">Investigation Velocity & Resolution Telemetry</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
-                <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a' }}>
+                <span style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   $128,450 Protected
                 </span>
                 <span
@@ -220,8 +236,8 @@ export default function DashboardView() {
                     fontWeight: 600,
                     padding: '2px 8px',
                     borderRadius: '9999px',
-                    background: '#e0f2fe',
-                    color: '#0284c7',
+                    background: 'var(--accent-cyan-muted)',
+                    color: 'var(--accent-cyan)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px'
@@ -238,10 +254,10 @@ export default function DashboardView() {
                   fontSize: '11px',
                   fontWeight: 600,
                   padding: '4px 8px',
-                  borderRadius: '6px',
-                  background: '#f8fafc',
-                  border: '1px solid var(--border)',
-                  color: '#64748b'
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--glass-border)',
+                  color: 'var(--text-muted)'
                 }}
               >
                 7-Day Ingestion Volume
@@ -259,60 +275,53 @@ export default function DashboardView() {
               gap: '12px',
               paddingBottom: '16px',
               marginBottom: '16px',
-              borderBottom: '1px solid var(--border)'
+              borderBottom: '1px solid var(--glass-border)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#94a3b8' }}></span>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Total Ingested</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-faint)' }} />
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Ingested</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#0284c7' }}></span>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Autonomous Resolved</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-cyan)' }} />
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Autonomous Resolved</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ea580c' }}></span>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Contradictions Flagged</span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--status-amber)' }} />
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Contradictions Flagged</span>
               </div>
             </div>
 
             {/* Source Gateways */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                <span style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#dbeafe', color: '#1d4ed8', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>Shopify OMS</span>
-                <span style={{ fontSize: '10px', color: '#94a3b8' }}>400 Syncs</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 8px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)' }}>
+                <span style={{ width: '16px', height: '16px', borderRadius: '4px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>S</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>Shopify OMS</span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                <span style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#dcfce7', color: '#15803d', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>$</span>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>Stripe API</span>
-                <span style={{ fontSize: '10px', color: '#94a3b8' }}>206 Audits</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 8px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--glass-border)' }}>
+                <span style={{ width: '16px', height: '16px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>$</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>Stripe API</span>
               </div>
             </div>
           </div>
 
-          {/* Interactive SVG Bar Chart matching Rexora aesthetics */}
+          {/* SVG Bar Chart with Dark Theme Colors */}
           <div style={{ height: '220px', width: '100%', position: 'relative' }}>
             <svg viewBox="0 0 700 200" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-              {/* Background Grid Lines */}
-              <line x1="0" y1="20" x2="700" y2="20" stroke="#f1f5f9" strokeDasharray="3 3" />
-              <line x1="0" y1="70" x2="700" y2="70" stroke="#f1f5f9" strokeDasharray="3 3" />
-              <line x1="0" y1="120" x2="700" y2="120" stroke="#f1f5f9" strokeDasharray="3 3" />
-              <line x1="0" y1="170" x2="700" y2="170" stroke="#e2e8f0" strokeWidth="1" />
+              <line x1="0" y1="20" x2="700" y2="20" stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
+              <line x1="0" y1="70" x2="700" y2="70" stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
+              <line x1="0" y1="120" x2="700" y2="120" stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" />
+              <line x1="0" y1="170" x2="700" y2="170" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1" />
 
-              {/* Render Bars for each day */}
               {chartDays.map((item, idx) => {
                 const colWidth = 700 / chartDays.length;
                 const xCenter = idx * colWidth + colWidth / 2;
                 const maxIngested = 100;
                 
-                // Heights
                 const barIngestedHeight = (item.ingested / maxIngested) * 140;
                 const barResolvedHeight = (item.resolved / maxIngested) * 140;
-                const barContradictionHeight = (item.contradiction / 10) * 40;
-
                 const isHovered = hoveredBarIndex === idx;
 
                 return (
@@ -322,34 +331,34 @@ export default function DashboardView() {
                     onMouseLeave={() => setHoveredBarIndex(null)}
                     style={{ cursor: 'pointer' }}
                   >
-                    {/* Ingested Bar (gray) */}
+                    {/* Ingested Bar (Muted Charcoal) */}
                     <rect
                       x={xCenter - 18}
                       y={170 - barIngestedHeight}
                       width="16"
                       height={barIngestedHeight}
                       rx="3"
-                      fill={isHovered ? '#64748b' : '#cbd5e1'}
+                      fill={isHovered ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.15)'}
                       transition="all 0.2s ease"
                     />
 
-                    {/* Resolved Bar (cyan/accent) */}
+                    {/* Resolved Bar (Luminous Cyan) */}
                     <rect
                       x={xCenter + 2}
                       y={170 - barResolvedHeight}
                       width="16"
                       height={barResolvedHeight}
                       rx="3"
-                      fill={isHovered ? '#0284c7' : '#38bdf8'}
+                      fill={isHovered ? 'var(--accent-cyan-hover)' : 'var(--accent-cyan)'}
                       transition="all 0.2s ease"
                     />
 
-                    {/* Contradiction indicator dot */}
+                    {/* Contradiction Dot */}
                     <circle
                       cx={xCenter + 10}
                       y={166 - barResolvedHeight}
                       r="3.5"
-                      fill="#ea580c"
+                      fill="var(--status-amber)"
                     />
 
                     {/* X-Axis Day Label */}
@@ -358,7 +367,7 @@ export default function DashboardView() {
                       y="190"
                       textAnchor="middle"
                       fontSize="12"
-                      fill={isHovered ? '#0f172a' : '#64748b'}
+                      fill={isHovered ? 'var(--text-primary)' : 'var(--text-muted)'}
                       fontWeight={isHovered ? '700' : '500'}
                     >
                       {item.day}
@@ -368,31 +377,31 @@ export default function DashboardView() {
                     {isHovered && (
                       <g>
                         <rect
-                          x={xCenter - 55}
-                          y={170 - barResolvedHeight - 50}
-                          width="110"
-                          height="42"
+                          x={xCenter - 60}
+                          y={170 - barResolvedHeight - 54}
+                          width="120"
+                          height="44"
                           rx="6"
-                          fill="#0f172a"
-                          opacity="0.95"
-                          filter="drop-shadow(0 4px 6px rgba(0,0,0,0.15))"
+                          fill="var(--bg-elevated)"
+                          stroke="var(--glass-border-light)"
+                          filter="drop-shadow(0 4px 12px rgba(0,0,0,0.5))"
                         />
                         <text
                           x={xCenter}
-                          y={170 - barResolvedHeight - 33}
+                          y={170 - barResolvedHeight - 35}
                           textAnchor="middle"
-                          fontSize="10"
-                          fill="#38bdf8"
+                          fontSize="11"
+                          fill="var(--accent-cyan)"
                           fontWeight="700"
                         >
                           {item.resolved} Resolved / {item.ingested}
                         </text>
                         <text
                           x={xCenter}
-                          y={170 - barResolvedHeight - 18}
+                          y={170 - barResolvedHeight - 19}
                           textAnchor="middle"
-                          fontSize="9"
-                          fill="#ffffff"
+                          fontSize="10"
+                          fill="var(--text-primary)"
                         >
                           {item.amount} Protected
                         </text>
@@ -405,7 +414,7 @@ export default function DashboardView() {
           </div>
         </div>
 
-        {/* Right Card (1 col): Active Investigations Queue */}
+        {/* Right Card: Active Investigations Queue */}
         <div className="ref-card">
           <div className="ref-card-header">
             <div>
@@ -429,38 +438,37 @@ export default function DashboardView() {
                 onClick={() => navigateToCase(c.id)}
                 style={{
                   padding: '12px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border)',
-                  background: '#ffffff',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--glass-border)',
+                  background: 'var(--bg-tertiary)',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'all var(--transition-fast)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#0284c7';
-                  e.currentTarget.style.backgroundColor = '#f8fafc';
+                  e.currentTarget.style.borderColor = 'var(--accent-cyan)';
+                  e.currentTarget.style.backgroundColor = 'var(--bg-elevated)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border)';
-                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.borderColor = 'var(--glass-border)';
+                  e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color: '#0284c7' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 700, color: 'var(--accent-cyan)' }}>
                       {c.id}
                     </span>
-                    <span style={{ fontSize: '10px', color: '#64748b' }}>• {c.category}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>• {c.category}</span>
                   </div>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, color: '#0f172a' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
                     {c.amount}
                   </span>
                 </div>
 
-                <p style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', lineHeight: 1.35, marginBottom: '8px' }}>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', lineHeight: 1.35, marginBottom: '8px' }}>
                   {c.title.length > 55 ? c.title.substring(0, 55) + '...' : c.title}
                 </p>
 
-                {/* Agents participating */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {c.activeAgents?.map((ag) => (
@@ -471,9 +479,17 @@ export default function DashboardView() {
                           fontSize: '9px',
                           fontWeight: 700,
                           padding: '1px 5px',
-                          borderRadius: '4px',
-                          background: ag.status === 'completed' ? '#dcfce7' : ag.status === 'investigating' ? '#e0f2fe' : '#f1f5f9',
-                          color: ag.status === 'completed' ? '#15803d' : ag.status === 'investigating' ? '#0284c7' : '#64748b'
+                          borderRadius: 'var(--radius-xs)',
+                          background: ag.status === 'completed'
+                            ? 'var(--status-emerald-bg)'
+                            : ag.status === 'investigating'
+                              ? 'var(--accent-cyan-muted)'
+                              : 'rgba(255, 255, 255, 0.06)',
+                          color: ag.status === 'completed'
+                            ? 'var(--status-emerald)'
+                            : ag.status === 'investigating'
+                              ? 'var(--accent-cyan)'
+                              : 'var(--text-muted)'
                         }}
                       >
                         {ag.name.replace(' Agent', '')}
@@ -489,83 +505,83 @@ export default function DashboardView() {
         </div>
       </div>
 
-      {/* 4. Main Grid Row 2: 1-Column Agent Swarm Diagnostics + 2-Column Recent Cases & Audit Stream */}
+      {/* 4. Main Grid Row 2: 1-Column Agent Swarm Overview + 2-Column Recent Cases */}
       <div className="ref-grid-1-2">
-        {/* Left Card (1 col): Agent Swarm Diagnostics */}
+        {/* Placeholder 5: System Overview / Agent Swarm Diagnostics */}
         <div className="ref-card">
           <div className="ref-card-header">
             <div>
-              <div className="ref-card-title">Agent Swarm Diagnostics</div>
+              <div className="ref-card-title">Multi-Agent Swarm Status</div>
               <div className="ref-card-subtitle">Deterministic Consensus Telemetry</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span className="pulse-indicator-dot"></span>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a' }}>Healthy</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className="pulse-indicator-dot" />
+              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--status-emerald)' }}>Operational</span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {/* Billing Agent */}
-            <div style={{ padding: '12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Billing Agent</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a' }}>99.2% Conf</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Billing Agent</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--status-emerald)' }}>99.2% Conf</span>
               </div>
-              <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px' }}>Stripe charge capture & escrow validation</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Stripe charge capture & escrow validation</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-faint)' }}>
                 <span>Latency: 182ms</span>
-                <span style={{ color: '#0284c7', fontWeight: 600 }}>v3.4.1 Active</span>
+                <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>v3.4.1 Active</span>
               </div>
             </div>
 
             {/* Order Agent */}
-            <div style={{ padding: '12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Order Agent</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a' }}>97.8% Conf</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Order Agent</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--status-emerald)' }}>97.8% Conf</span>
               </div>
-              <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px' }}>OMS state machine & warehouse inventory hold</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>OMS state machine & warehouse inventory hold</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-faint)' }}>
                 <span>Latency: 310ms</span>
-                <span style={{ color: '#0284c7', fontWeight: 600 }}>v2.8.0 Active</span>
+                <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>v2.8.0 Active</span>
               </div>
             </div>
 
             {/* Technical Agent */}
-            <div style={{ padding: '12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>Technical Agent</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#0284c7' }}>92.4% Conf</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Technical Agent</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-cyan)' }}>92.4% Conf</span>
               </div>
-              <p style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px' }}>Ingress trace, Kafka message bus & DLQ diagnostics</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8' }}>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>Ingress trace, Kafka message bus & DLQ diagnostics</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '10px', color: 'var(--text-faint)' }}>
                 <span>Latency: 890ms</span>
-                <span style={{ color: '#0284c7', fontWeight: 600 }}>v4.1.2 Active</span>
+                <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>v4.1.2 Active</span>
               </div>
             </div>
 
             {/* Coordinator Engine */}
-            <div style={{ padding: '12px', borderRadius: '8px', background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+            <div style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid var(--status-emerald-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#15803d' }}>Coordinator Consensus</span>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#15803d' }}>98.1% Score</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--status-emerald)' }}>Coordinator Consensus</span>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--status-emerald)' }}>98.1% Score</span>
               </div>
-              <p style={{ fontSize: '11px', color: '#166534', marginBottom: '4px' }}>Weighted Bayesian consensus with non-fraud safeguard</p>
-              <div style={{ fontSize: '10px', color: '#15803d', fontWeight: 600 }}>0 Hallucinations Recorded</div>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Weighted Bayesian consensus with non-fraud safeguard</p>
+              <div style={{ fontSize: '10px', color: 'var(--status-emerald)', fontWeight: 600 }}>0 Hallucinations Recorded</div>
             </div>
           </div>
         </div>
 
-        {/* Right Card (2 cols): Recent Cases & Live Audit Stream */}
+        {/* Placeholder 6: Recent Cases & Live Audit Stream */}
         <div className="ref-card">
           <div className="ref-card-header">
             <div>
               <div className="ref-card-title">Recent Cases & Live Audit Stream</div>
-              <div className="ref-card-subtitle">Operational case queue & deterministic triage log</div>
+              <div className="ref-card-subtitle">Operational dispute cases & deterministic triage log</div>
             </div>
 
             {/* Filter Pills */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', padding: '3px', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-tertiary)', padding: '3px', borderRadius: 'var(--radius-md)', border: '1px solid var(--glass-border)' }}>
               {[
                 { id: 'all', label: 'All Cases' },
                 { id: 'active', label: 'Investigating' },
@@ -578,13 +594,13 @@ export default function DashboardView() {
                   style={{
                     border: 'none',
                     padding: '4px 10px',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-sm)',
                     fontSize: '11px',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    background: filterCategory === f.id ? '#ffffff' : 'transparent',
-                    color: filterCategory === f.id ? '#0f172a' : '#64748b',
-                    boxShadow: filterCategory === f.id ? '0 1px 2px rgba(0,0,0,0.06)' : 'none'
+                    background: filterCategory === f.id ? 'var(--accent-cyan)' : 'transparent',
+                    color: filterCategory === f.id ? '#07090e' : 'var(--text-muted)',
+                    transition: 'all var(--transition-fast)'
                   }}
                 >
                   {f.label}
@@ -593,14 +609,14 @@ export default function DashboardView() {
             </div>
           </div>
 
-          {/* Cases Table */}
+          {/* Cases Table with Dark Theme Styling */}
           <div style={{ overflowX: 'auto', marginBottom: '20px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', color: '#64748b' }}>
+                <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>Case ID</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>Customer</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Issue</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600 }}>Issue Title</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>Category</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>Status</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600 }}>Priority</th>
@@ -611,25 +627,25 @@ export default function DashboardView() {
                 {filteredCases.map(c => (
                   <tr
                     key={c.id}
-                    style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background 0.15s ease' }}
+                    style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)', cursor: 'pointer', transition: 'background var(--transition-fast)' }}
                     onClick={() => navigateToCase(c.id)}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   >
-                    <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#0284c7' }}>
+                    <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--accent-cyan)' }}>
                       {c.id}
                     </td>
                     <td style={{ padding: '10px 12px' }}>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{c.customer.name}</div>
-                      <div style={{ fontSize: '10px', color: '#94a3b8' }}>{c.customer.tier}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c.customer.name}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--text-faint)' }}>{c.customer.tier}</div>
                     </td>
                     <td style={{ padding: '10px 12px', maxWidth: '240px' }}>
-                      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: '#334155' }}>
+                      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-secondary)' }}>
                         {c.title}
                       </div>
                     </td>
                     <td style={{ padding: '10px 12px' }}>
-                      <span style={{ fontSize: '10px', padding: '2px 6px', background: '#f1f5f9', borderRadius: '4px', color: '#475569', fontWeight: 500 }}>
+                      <span style={{ fontSize: '10px', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: '4px', color: 'var(--text-muted)', border: '1px solid var(--glass-border)' }}>
                         {c.category}
                       </span>
                     </td>
@@ -642,10 +658,10 @@ export default function DashboardView() {
                           fontSize: '11px',
                           fontWeight: 600,
                           color: c.priority === 'Critical' || c.priority === 'Urgent'
-                            ? '#dc2626'
+                            ? 'var(--status-rose)'
                             : c.priority === 'High'
-                              ? '#ea580c'
-                              : '#64748b'
+                              ? 'var(--status-amber)'
+                              : 'var(--text-muted)'
                         }}
                       >
                         {c.priority}
@@ -654,7 +670,7 @@ export default function DashboardView() {
                     <td style={{ padding: '10px 12px', textAlign: 'right' }}>
                       <button
                         className="btn btn-secondary btn-sm"
-                        style={{ fontSize: '11px', padding: '4px 8px' }}
+                        style={{ fontSize: '11px', padding: '3px 8px', height: '26px' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           navigateToCase(c.id);
@@ -669,10 +685,10 @@ export default function DashboardView() {
             </table>
           </div>
 
-          {/* Investigation Activity Stream Timeline */}
+          {/* Activity Stream Feed */}
           <div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={14} color="#64748b" />
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={14} color="var(--text-muted)" />
               <span>Investigation Activity Feed</span>
             </div>
 
@@ -687,17 +703,17 @@ export default function DashboardView() {
                       alignItems: 'center',
                       gap: '8px',
                       padding: '8px 10px',
-                      borderRadius: '6px',
-                      background: '#f8fafc',
-                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--bg-tertiary)',
+                      border: '1px solid var(--glass-border)',
                       fontSize: '11px'
                     }}
                   >
-                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#ffffff', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--bg-surface)', border: '1px solid var(--glass-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <IconComponent size={12} color={act.color} />
                     </div>
-                    <span style={{ flex: 1, color: '#334155', lineHeight: 1.3 }}>{act.text}</span>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', flexShrink: 0 }}>{act.time}</span>
+                    <span style={{ flex: 1, color: 'var(--text-secondary)', lineHeight: 1.3 }}>{act.text}</span>
+                    <span style={{ fontSize: '10px', color: 'var(--text-faint)', flexShrink: 0 }}>{act.time}</span>
                   </div>
                 );
               })}

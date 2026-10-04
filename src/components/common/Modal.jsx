@@ -23,33 +23,54 @@ export default function Modal({
 
   return (
     <div
-      className="modal-overlay animate-fade-in"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(5, 7, 12, 0.75)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        zIndex: 'var(--z-modal)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px'
+      }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="modal-content animate-scale-in"
-        style={{ maxWidth }}
+        style={{
+          width: '100%',
+          maxWidth,
+          maxHeight: '90vh',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--glass-border-light)',
+          borderRadius: 'var(--radius-xl)',
+          boxShadow: 'var(--glass-shadow-lg)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           style={{
             padding: '18px 24px',
-            borderBottom: '1px solid #e2e8f0',
+            borderBottom: '1px solid var(--glass-border)',
             display: 'flex',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
-            background: '#f8fafc'
+            background: 'var(--bg-tertiary)'
           }}
         >
           <div>
-            <h3 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
               {title}
             </h3>
             {subtitle && (
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
                 {subtitle}
               </p>
             )}
@@ -57,17 +78,19 @@ export default function Modal({
           <button
             onClick={onClose}
             style={{
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--glass-border)',
               borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-secondary)',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'all 0.15s ease'
+              transition: 'all var(--transition-fast)'
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
             aria-label="Close modal"
           >
             <X size={16} />
