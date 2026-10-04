@@ -20,9 +20,11 @@ import {
   RECENT_INVESTIGATION_ACTIVITY
 } from '../mock/dashboardData.js';
 
+import { SUPPORT_FAQS } from '../mock/supportData.js';
+
 // In-memory cache for stateful mutations during session
 let casesStore = [...INITIAL_CASES];
-let faqStore = [...FAQ_DATA];
+let faqStore = [...SUPPORT_FAQS];
 let patternsStore = [...PATTERNS_DATA];
 let preventionStore = [...PREVENTION_RECOMMENDATIONS];
 
@@ -174,10 +176,21 @@ export const api = {
           source: "ARGUS Support Intake Form",
           timestamp: nowStr,
           status: "Verified",
-          description: payload.complaintText,
           payload: { text: payload.complaintText, attachments: payload.attachments || [] }
-        }
+        },
+        ...(payload.attachments || []).map((att, i) => ({
+          id: `ev-upload-${Date.now()}-${i}`,
+          title: `Evidence File: ${att.name}`,
+          type: att.type && att.type.includes('image') ? 'Image Evidence' : 'Document File',
+          source: 'Customer Upload',
+          timestamp: nowStr,
+          status: 'Verified Prototype',
+          description: `Attached proof (${(att.size / 1024).toFixed(1)} KB) submitted during complaint intake.`,
+          payload: { filename: att.name, size: att.size, type: att.type }
+        }))
       ],
+      resolutionPreference: payload.resolutionPreference || "Full Refund to Original Payment Method",
+      incidentDate: payload.incidentDate || nowStr.split(' ')[0],
       contradiction: null,
       rootCause: {
         headline: "Transient event processing latency between payment capture and fulfillment release.",
@@ -274,6 +287,31 @@ export const api = {
       );
     }
     return items;
+  },
+
+  async voteFaqHelpful(faqId, isHelpful = true) {
+    await simulateDelay(60);
+    const index = faqStore.findIndex(f => f.id === faqId);
+    if (index !== -1) {
+      const updated = {
+        ...faqStore[index],
+        helpfulCount: isHelpful ? (faqStore[index].helpfulCount || 0) + 1 : faqStore[index].helpfulCount,
+        notHelpfulCount: !isHelpful ? (faqStore[index].notHelpfulCount || 0) + 1 : faqStore[index].notHelpfulCount
+      };
+      faqStore[index] = updated;
+      return updated;
+    }
+    return null;
+  },
+
+  async getCustomerCases(customerEmail = '') {
+    await simulateDelay(120);
+    let list = [...casesStore];
+    if (customerEmail) {
+      const emailLower = customerEmail.toLowerCase();
+      list = list.filter(c => c.customer?.email?.toLowerCase() === emailLower);
+    }
+    return list;
   },
 
   // --- Intelligence & Patterns ---

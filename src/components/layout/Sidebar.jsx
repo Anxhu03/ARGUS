@@ -73,12 +73,16 @@ export default function Sidebar({ isOpen, onCloseMobile, isMobile = false }) {
 
   const handleNavClick = (id) => {
     // If routing to sub-support views, configure support mode
-    if (id === 'support-faq') {
+    if (id === 'support') {
+      navigateToSupport('overview');
+    } else if (id === 'support-faq') {
       navigateToSupport('faq');
-    } else if (id === 'support-ask' || id === 'support-complaint') {
-      navigateToSupport('agent');
+    } else if (id === 'support-ask') {
+      navigateToSupport('ask');
+    } else if (id === 'support-complaint') {
+      navigateToSupport('complaint');
     } else if (id === 'support-my-cases') {
-      setCurrentView('cases');
+      navigateToSupport('my-cases');
     } else {
       setCurrentView(id);
     }
