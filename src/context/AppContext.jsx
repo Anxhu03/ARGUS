@@ -22,6 +22,15 @@ export function AppProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
 
+  // Shell & Navigation state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(3);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed(prev => !prev);
+  }, []);
+
   // Toast helper
   const addToast = useCallback((toast) => {
     const id = Date.now() + Math.random().toString(36).substring(2, 6);
@@ -148,7 +157,14 @@ export function AppProvider({ children }) {
     addToast,
     removeToast,
     triggerRefresh,
-    startInvestigationFromSupport
+    startInvestigationFromSupport,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+    toggleSidebar,
+    globalSearchOpen,
+    setGlobalSearchOpen,
+    unreadNotifications,
+    setUnreadNotifications
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

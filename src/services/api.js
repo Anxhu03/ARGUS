@@ -12,6 +12,14 @@ import {
   SYSTEM_KPI_STATS
 } from '../mock/mockData.js';
 
+import {
+  DASHBOARD_KPIS,
+  VOLUME_ANALYTICS,
+  CASE_DISTRIBUTION,
+  CASES_REQUIRING_ATTENTION,
+  RECENT_INVESTIGATION_ACTIVITY
+} from '../mock/dashboardData.js';
+
 // In-memory cache for stateful mutations during session
 let casesStore = [...INITIAL_CASES];
 let faqStore = [...FAQ_DATA];
@@ -304,5 +312,49 @@ export const api = {
       humanEscalations: humanReview,
       contradictionsDetected: contradictions
     };
+  },
+
+  // --- Operational Dashboard Telemetry ---
+  async getDashboardKPIs() {
+    await simulateDelay(80);
+    const active = casesStore.filter(c => c.status !== 'Resolved').length;
+    const resolved = casesStore.filter(c => c.status === 'Resolved').length;
+    const humanReview = casesStore.filter(c => c.status === 'Human Review' || c.contradiction !== null).length;
+
+    return {
+      ...DASHBOARD_KPIS,
+      activeCases: {
+        ...DASHBOARD_KPIS.activeCases,
+        value: 20 + active
+      },
+      resolvedCases: {
+        ...DASHBOARD_KPIS.resolvedCases,
+        value: 1420 + resolved
+      },
+      humanEscalations: {
+        ...DASHBOARD_KPIS.humanEscalations,
+        value: 10 + humanReview
+      }
+    };
+  },
+
+  async getVolumeAnalytics(timeframe = '7d') {
+    await simulateDelay(100);
+    return VOLUME_ANALYTICS[timeframe] || VOLUME_ANALYTICS['7d'];
+  },
+
+  async getCategoryDistribution() {
+    await simulateDelay(90);
+    return [...CASE_DISTRIBUTION];
+  },
+
+  async getAttentionCases() {
+    await simulateDelay(110);
+    return [...CASES_REQUIRING_ATTENTION];
+  },
+
+  async getActivityStream() {
+    await simulateDelay(90);
+    return [...RECENT_INVESTIGATION_ACTIVITY];
   }
 };
