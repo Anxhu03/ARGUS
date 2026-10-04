@@ -902,6 +902,141 @@ export const INITIAL_CASES = [
       recommendedAction: "Review carrier initial drop-off scan weight; if drop-off was 0.42kg, initiate customer dispute protocol; if drop-off was 3.24kg, process insurance claim for in-transit theft.",
       assignedSpecialist: "Asset Protection Senior Investigator"
     }
+  },
+  {
+    id: "ARG-1047",
+    title: "API Gateway 504 timeout during checkout cart reservation",
+    customer: {
+      name: "David Kim",
+      email: "david.kim@fintech-ops.net",
+      avatar: "DK",
+      tier: "Standard Tier",
+      joinedDate: "Feb 2025",
+      reliabilityScore: 88,
+      reliabilityBand: "High Reliability",
+      totalCases: 3,
+      resolvedCases: 2,
+      disputedCases: 0
+    },
+    complaintText: "During high-traffic flash sale, my checkout timed out with 504 Gateway Error. My account shows reward points debited, but no order receipt was generated.",
+    category: "Technical & API Lag",
+    priority: "Medium",
+    status: "Evidence Required",
+    createdAt: "2026-09-30 04:30:00",
+    updatedAt: "2026-09-30 11:50:00",
+    orderId: "ORD-99124",
+    amount: "$199.00",
+    activeAgents: [
+      { id: "billing", name: "Billing Agent", status: "completed", progress: 100, role: "Points & Ledger Audit" },
+      { id: "tech", name: "Technical Agent", status: "investigating", progress: 65, role: "Ingress Log Extraction" }
+    ],
+    agentsData: {
+      billing: {
+        agentName: "Billing Agent",
+        version: "v3.4.1",
+        status: "Completed",
+        confidenceScore: 96.0,
+        task: "Verify rewards points hold and reverse deduction",
+        summary: "Identified 1,990 loyalty points placed in pending escrow without matching order ID.",
+        executionTime: "140ms",
+        metrics: [{ label: "Points Hold", value: "1,990 Pts" }],
+        findings: ["Points held in uncommitted transaction."]
+      }
+    },
+    timeline: [
+      { step: 1, title: "Complaint Ingested", desc: "Customer reported 504 checkout error", time: "04:30:00", status: "completed" },
+      { step: 2, title: "Telemetry Queried", desc: "Gateway error trace identified in Datadog", time: "04:31:00", status: "completed" },
+      { step: 3, title: "Awaiting Session Log", desc: "Extracting customer browser request correlation ID", time: "Current", status: "current" }
+    ],
+    evidence: [],
+    contradiction: null,
+    rootCause: null,
+    resolution: null,
+    escalation: null
+  },
+  {
+    id: "ARG-1048",
+    title: "Account locked out during multi-factor reset on mobile checkout",
+    customer: {
+      name: "Sarah Jenkins",
+      email: "sarah.j@designhub.co",
+      avatar: "SJ",
+      tier: "Enterprise Tier",
+      joinedDate: "Nov 2024",
+      reliabilityScore: 96,
+      reliabilityBand: "High Reliability",
+      totalCases: 6,
+      resolvedCases: 6,
+      disputedCases: 0
+    },
+    complaintText: "Unable to log in after changing phone number. System sent security lock alert.",
+    category: "Other & Account",
+    priority: "Low",
+    status: "Resolved",
+    createdAt: "2026-09-29 18:20:00",
+    updatedAt: "2026-09-30 08:10:00",
+    orderId: "ACC-55201",
+    amount: "$0.00",
+    activeAgents: [
+      { id: "tech", name: "Technical Agent", status: "completed", progress: 100, role: "Auth Security Audit" },
+      { id: "coordinator", name: "Coordinator", status: "completed", progress: 100, role: "Identity Verification" }
+    ],
+    agentsData: {},
+    timeline: [
+      { step: 1, title: "Identity Verified", desc: "Out-of-band SMS challenge approved", time: "18:25:00", status: "completed" },
+      { step: 2, title: "Account Unlocked", desc: "Security hold lifted autonomously", time: "18:26:00", status: "completed" }
+    ],
+    evidence: [],
+    contradiction: null,
+    rootCause: null,
+    resolution: {
+      actionType: "Autonomous Security Unlock",
+      status: "Executed",
+      confidenceScore: 99.8,
+      headline: "Account Access Restored via Verified Out-of-Band Auth",
+      reason: "Confirmed zero brute-force indicators; authorized phone number updated.",
+      customerFacingMessage: "Your account access has been safely restored. You may now log in using your updated two-factor credentials.",
+      internalActions: [{ id: "act-1", title: "Lift account lock and refresh session token", status: "Executed" }]
+    },
+    escalation: null
+  },
+  {
+    id: "ARG-1049",
+    title: "Warehouse pick queue lock stalled delivery dispatch for 48 hours",
+    customer: {
+      name: "Alex Rivera",
+      email: "a.rivera@logistics-direct.com",
+      avatar: "AR",
+      tier: "Commercial Partner",
+      joinedDate: "Aug 2024",
+      reliabilityScore: 91,
+      reliabilityBand: "High Reliability",
+      totalCases: 4,
+      resolvedCases: 3,
+      disputedCases: 0
+    },
+    complaintText: "Commercial order #ORD-44120 scheduled for priority dispatch on Tuesday has not moved from warehouse status.",
+    category: "Order & Logistics",
+    priority: "Medium",
+    status: "Investigating",
+    createdAt: "2026-09-30 06:15:00",
+    updatedAt: "2026-09-30 11:40:00",
+    orderId: "ORD-44120",
+    amount: "$520.00",
+    activeAgents: [
+      { id: "order", name: "Order Agent", status: "investigating", progress: 75, role: "Warehouse Bin Audit" },
+      { id: "tech", name: "Technical Agent", status: "completed", progress: 100, role: "OMS State Queue Diagnosis" }
+    ],
+    agentsData: {},
+    timeline: [
+      { step: 1, title: "Ticket Ingested", desc: "Dispatched to Warehouse OMS Agent", time: "06:15:00", status: "completed" },
+      { step: 2, title: "Bin Lock Identified", desc: "Pallet reservation held on Bay 14-C", time: "06:20:00", status: "completed" }
+    ],
+    evidence: [],
+    contradiction: null,
+    rootCause: null,
+    resolution: null,
+    escalation: null
   }
 ];
 
