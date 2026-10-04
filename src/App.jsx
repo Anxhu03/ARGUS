@@ -18,7 +18,6 @@ function AppContent() {
       case 'dashboard':
         return <DashboardView />;
       case 'cases':
-      case 'support-my-cases':
         return <CasesListView />;
       case 'case-detail':
       case 'investigations':
@@ -27,6 +26,7 @@ function AppContent() {
       case 'support-faq':
       case 'support-ask':
       case 'support-complaint':
+      case 'support-my-cases':
         return <SupportView />;
       case 'intelligence':
       case 'patterns':
