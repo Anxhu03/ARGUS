@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StatusBadge from '../common/StatusBadge';
+import Modal from '../common/Modal';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
 import {
@@ -10,41 +11,92 @@ import {
   CheckCircle2,
   AlertTriangle,
   ExternalLink,
-  ChevronLeft
+  ChevronLeft,
+  Edit3,
+  Users,
+  Flag,
+  ArrowRight,
+  Clock,
+  Send,
+  Layers
 } from 'lucide-react';
 
-export default function CaseHeader({ caseData, onReload }) {
-  const { setCurrentView, addToast, triggerRefresh } = useApp();
+export default function CaseHeader({ caseData, onReload, onNavigateToWorkspace }) {
+  const {
+    setCurrentView,
+    addToast,
+    triggerRefresh,
+    updateCaseStatus,
+    updateCasePriority,
+    assignCaseTeam,
+    escalateCase,
+    approveCaseResolution
+  } = useApp();
 
-  const handleApproveResolution = async () => {
+  // Modals state
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isPriorityModalOpen, setIsPriorityModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+
+  // Form states
+  const [selectedStatus, setSelectedStatus] = useState(caseData.status);
+  const [statusReason, setStatusReason] = useState('');
+  const [selectedPriority, setSelectedPriority] = useState(caseData.priority);
+  const [selectedTeam, setSelectedTeam] = useState(caseData.assignedTeam || 'Payments Dispute');
+  const [selectedAgent, setSelectedAgent] = useState(caseData.assignedAgent || 'Sarah Chen');
+
+  const handleStatusSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await api.approveResolution(caseData.id);
-      addToast({
-        type: 'success',
-        title: 'Resolution Approved & Executed',
-        message: `Case ${caseData.id} marked as resolved. Automated internal actions dispatched.`
-      });
-      triggerRefresh();
+      await updateCaseStatus(caseData.id, selectedStatus, statusReason);
+      setIsStatusModalOpen(false);
+      setStatusReason('');
     } catch (err) {
-      addToast({ type: 'error', title: 'Error', message: err.message });
+      addToast({ type: 'error', title: 'Status Update Error', message: err.message });
     }
   };
 
-  const handleEscalate = async () => {
+  const handlePrioritySubmit = async (e) => {
+    e.preventDefault();
     try {
-      await api.escalateCaseToHuman(
-        caseData.id,
-        'Manual escalation requested by support operations lead for supervisor sign-off.',
-        'High'
-      );
-      addToast({
-        type: 'warning',
-        title: 'Escalated to Human Review',
-        message: `Case ${caseData.id} transferred to Tier 2 Operations specialist queue.`
-      });
-      triggerRefresh();
+      await updateCasePriority(caseData.id, selectedPriority);
+      setIsPriorityModalOpen(false);
     } catch (err) {
-      addToast({ type: 'error', title: 'Error', message: err.message });
+      addToast({ type: 'error', title: 'Priority Update Error', message: err.message });
+    }
+  };
+
+  const handleAssignSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await assignCaseTeam(caseData.id, selectedTeam, selectedAgent);
+      setIsAssignModalOpen(false);
+    } catch (err) {
+      addToast({ type: 'error', title: 'Assignment Error', message: err.message });
+    }
+  };
+
+  const handleEscalateClick = async () => {
+    if (window.confirm(`Are you sure you want to escalate case ${caseData.id} to Tier 2 Human Review?`)) {
+      try {
+        await escalateCase(
+          caseData.id,
+          'Manual escalation initiated by support investigator for supervisor review.',
+          'High'
+        );
+      } catch (err) {
+        addToast({ type: 'error', title: 'Escalation Failed', message: err.message });
+      }
+    }
+  };
+
+  const handleApproveClick = async () => {
+    if (window.confirm(`Approve proposed resolution and transition case ${caseData.id} to Resolved?`)) {
+      try {
+        await approveCaseResolution(caseData.id);
+      } catch (err) {
+        addToast({ type: 'error', title: 'Resolution Failed', message: err.message });
+      }
     }
   };
 
@@ -58,7 +110,7 @@ export default function CaseHeader({ caseData, onReload }) {
         gap: '16px'
       }}
     >
-      {/* Top Breadcrumb & Actions */}
+      {/* Top Breadcrumb & Header Action Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <button
           className="btn btn-secondary btn-sm"
@@ -66,39 +118,81 @@ export default function CaseHeader({ caseData, onReload }) {
           style={{ gap: '6px', height: '32px' }}
         >
           <ChevronLeft size={15} />
-          <span>Back to Cases</span>
+          <span>Back to All Cases</span>
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Quick Status Modal Button */}
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setIsStatusModalOpen(true)}
+            style={{ height: '32px', gap: '6px' }}
+            title="Update case status"
+          >
+            <Edit3 size={13} />
+            <span>Update Status</span>
+          </button>
+
+          {/* Quick Priority Modal Button */}
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setIsPriorityModalOpen(true)}
+            style={{ height: '32px', gap: '6px' }}
+            title="Change priority level"
+          >
+            <Flag size={13} />
+            <span>Change Priority</span>
+          </button>
+
+          {/* Quick Assign Modal Button */}
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => setIsAssignModalOpen(true)}
+            style={{ height: '32px', gap: '6px' }}
+            title="Assign team and specialist"
+          >
+            <Users size={13} />
+            <span>Assign Team</span>
+          </button>
+
+          {/* Re-run agents */}
           <button
             className="btn btn-secondary btn-sm"
             onClick={onReload}
             title="Re-run diagnostic synchronization"
-            style={{ height: '32px' }}
+            style={{ height: '32px', gap: '6px' }}
           >
             <RotateCcw size={13} />
             <span>Re-run Agents</span>
           </button>
 
+          {/* Escalate to Human */}
           {caseData.status !== 'Human Review' && caseData.status !== 'Resolved' && (
             <button
               className="btn btn-secondary btn-sm"
-              onClick={handleEscalate}
-              style={{ color: '#ea580c', borderColor: '#fed7aa', background: '#fff7ed', height: '32px' }}
+              onClick={handleEscalateClick}
+              style={{
+                color: 'var(--status-amber)',
+                borderColor: 'rgba(245, 158, 11, 0.3)',
+                background: 'rgba(245, 158, 11, 0.08)',
+                height: '32px',
+                gap: '6px'
+              }}
             >
               <AlertTriangle size={13} />
               <span>Escalate to Human</span>
             </button>
           )}
 
+          {/* Approve Resolution */}
           {caseData.status !== 'Resolved' && (
             <button
               className="btn btn-primary btn-sm"
-              onClick={handleApproveResolution}
-              style={{ height: '32px' }}
+              onClick={handleApproveClick}
+              style={{ height: '32px', gap: '6px' }}
             >
               <CheckCircle2 size={13} />
-              <span>Approve & Execute Resolution</span>
+              <span>Approve Resolution</span>
             </button>
           )}
         </div>
@@ -111,51 +205,71 @@ export default function CaseHeader({ caseData, onReload }) {
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: 700,
-                color: '#0284c7',
-                background: '#e0f2fe',
+                color: 'var(--accent-cyan)',
+                background: 'rgba(6, 182, 212, 0.12)',
                 padding: '2px 8px',
                 borderRadius: '4px',
-                border: '1px solid #bae6fd'
+                border: '1px solid var(--glass-border-cyan)'
               }}
             >
               {caseData.id}
             </span>
+
             <StatusBadge status={caseData.status} />
+
             <span
               style={{
                 fontSize: '11px',
                 fontWeight: 600,
-                padding: '2px 6px',
+                padding: '2px 8px',
                 borderRadius: '4px',
-                background: '#f1f5f9',
-                color: caseData.priority === 'Critical' || caseData.priority === 'Urgent'
-                  ? '#dc2626'
+                background: caseData.priority === 'Critical' || caseData.priority === 'Urgent'
+                  ? 'rgba(244, 63, 94, 0.15)'
                   : caseData.priority === 'High'
-                    ? '#ea580c'
-                    : '#64748b'
+                    ? 'rgba(245, 158, 11, 0.15)'
+                    : 'rgba(255, 255, 255, 0.06)',
+                color: caseData.priority === 'Critical' || caseData.priority === 'Urgent'
+                  ? 'var(--status-rose)'
+                  : caseData.priority === 'High'
+                    ? 'var(--status-amber)'
+                    : 'var(--text-muted)',
+                border: '1px solid var(--glass-border)'
               }}
             >
               {caseData.priority} Priority
             </span>
-            <span style={{ fontSize: '11px', color: '#64748b' }}>
-              Category: <strong style={{ color: '#0f172a' }}>{caseData.category}</strong>
+
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              Category: <strong style={{ color: 'var(--text-primary)' }}>{caseData.category}</strong>
+            </span>
+
+            <span style={{ fontSize: '11px', color: 'var(--text-faint)' }}>
+              Team: <strong style={{ color: 'var(--text-secondary)' }}>{caseData.assignedTeam || 'Payments Dispute'}</strong>
             </span>
           </div>
 
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
             {caseData.title}
           </h2>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Clock size={12} /> Created: {caseData.createdAt || 'Oct 14, 2026 14:22 UTC'}
+            </span>
+            <span>•</span>
+            <span>Last Updated: {caseData.updatedAt || 'Just now'}</span>
+          </div>
         </div>
 
         {/* Customer & Order Context Pill */}
         <div
           style={{
-            padding: '10px 16px',
-            borderRadius: '8px',
-            background: '#f8fafc',
-            border: '1px solid var(--border)',
+            padding: '12px 18px',
+            borderRadius: 'var(--radius-md)',
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--glass-border)',
             display: 'flex',
             alignItems: 'center',
             gap: '14px',
@@ -164,71 +278,243 @@ export default function CaseHeader({ caseData, onReload }) {
         >
           <div
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '50%',
-              background: '#0f172a',
+              width: '38px',
+              height: '38px',
+              borderRadius: 'var(--radius-full)',
+              background: 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
-              fontSize: '12px',
+              fontSize: '13px',
               color: '#ffffff'
             }}
           >
-            {caseData.customer.avatar || 'CU'}
+            {caseData.customer?.avatar || caseData.customer?.name?.substring(0, 2).toUpperCase() || 'CU'}
           </div>
 
           <div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
-              {caseData.customer.name}
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              {caseData.customer?.name || 'Customer'}
             </div>
-            <div style={{ fontSize: '10px', color: '#64748b' }}>
-              {caseData.customer.tier} • Joined {caseData.customer.joinedDate}
-            </div>
-            <div style={{ fontSize: '10px', color: '#0284c7', marginTop: '1px', fontWeight: 600 }}>
-              Reliability Score: {caseData.customer.reliabilityScore}% ({caseData.customer.reliabilityBand})
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              {caseData.customer?.tier || 'Standard'} • Reliability: <strong style={{ color: 'var(--status-emerald)' }}>{caseData.customer?.reliabilityScore || 90}%</strong>
             </div>
           </div>
 
-          <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '14px' }}>
-            <div style={{ fontSize: '10px', color: '#64748b' }}>Order ID</div>
-            <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0f172a' }}>
-              {caseData.orderId}
+          <div style={{ borderLeft: '1px solid var(--glass-border)', paddingLeft: '14px' }}>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Order ID</div>
+            <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--accent-cyan)' }}>
+              {caseData.orderId || 'N/A'}
             </div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#0284c7', fontWeight: 600 }}>
-              {caseData.amount}
+            <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 600 }}>
+              {caseData.amount || '$0.00'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Customer Verbatim Complaint Callout */}
-      <div
-        style={{
-          marginTop: '4px',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          background: '#f8fafc',
-          borderLeft: '4px solid #0284c7',
-          borderTop: '1px solid var(--border)',
-          borderRight: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)'
-        }}
+      {/* MODAL 1: Update Status */}
+      <Modal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        title={`Update Status — Case ${caseData.id}`}
+        subtitle="Select a new operational lifecycle state and provide an optional rationale."
+        maxWidth="500px"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-          <User size={13} color="#0284c7" />
-          <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#0284c7' }}>
-            Customer's Verbatim Statement
-          </span>
-          <span style={{ fontSize: '10px', color: '#94a3b8', marginLeft: 'auto' }}>
-            Logged at: {caseData.createdAt}
-          </span>
-        </div>
-        <p style={{ fontSize: '12px', color: '#334155', lineHeight: 1.6, fontStyle: 'italic' }}>
-          "{caseData.complaintText}"
-        </p>
-      </div>
+        <form onSubmit={handleStatusSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Select Status
+            </label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-primary)',
+                padding: '8px 12px',
+                fontSize: '13px',
+                outline: 'none'
+              }}
+            >
+              <option value="Under Review">Under Review</option>
+              <option value="Investigation in Progress">Investigation in Progress</option>
+              <option value="Evidence Required">Evidence Required</option>
+              <option value="Contradiction Flagged">Contradiction Flagged</option>
+              <option value="Human Review">Human Review</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Escalated">Escalated</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Reason for Status Transition (Optional)
+            </label>
+            <textarea
+              value={statusReason}
+              onChange={(e) => setStatusReason(e.target.value)}
+              placeholder="E.g. Dispatched carrier proof request or completed ledger audit..."
+              rows={3}
+              style={{
+                width: '100%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-primary)',
+                padding: '8px 12px',
+                fontSize: '12px',
+                outline: 'none',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setIsStatusModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary btn-sm">
+              Confirm Status Update
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL 2: Change Priority */}
+      <Modal
+        isOpen={isPriorityModalOpen}
+        onClose={() => setIsPriorityModalOpen(false)}
+        title={`Change Priority — Case ${caseData.id}`}
+        subtitle="Adjust the investigation urgency based on financial risk or SLA threshold."
+        maxWidth="460px"
+      >
+        <form onSubmit={handlePrioritySubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Select Priority Tier
+            </label>
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-primary)',
+                padding: '8px 12px',
+                fontSize: '13px',
+                outline: 'none'
+              }}
+            >
+              <option value="Low">Low — Routine inquiry</option>
+              <option value="Medium">Medium — Standard dispute</option>
+              <option value="High">High — Escalated customer or high-value cart</option>
+              <option value="Urgent">Urgent — Impending gateway chargeback deadline</option>
+              <option value="Critical">Critical — Regulatory compliance or active anomaly</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setIsPriorityModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary btn-sm">
+              Save Priority
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL 3: Assign Team & Agent */}
+      <Modal
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        title={`Assign Team & Agent — Case ${caseData.id}`}
+        subtitle="Delegate this investigation to a specialized department or operational investigator."
+        maxWidth="500px"
+      >
+        <form onSubmit={handleAssignSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Assigned Department / Team
+            </label>
+            <select
+              value={selectedTeam}
+              onChange={(e) => setSelectedTeam(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-primary)',
+                padding: '8px 12px',
+                fontSize: '13px',
+                outline: 'none'
+              }}
+            >
+              <option value="Payments Dispute">Payments Dispute</option>
+              <option value="Tier 2 Operations">Tier 2 Operations</option>
+              <option value="Fraud & Risk">Fraud & Risk</option>
+              <option value="Fulfillment Logistics">Fulfillment Logistics</option>
+              <option value="Executive Escalations">Executive Escalations</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Assigned Specialist
+            </label>
+            <select
+              value={selectedAgent}
+              onChange={(e) => setSelectedAgent(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--text-primary)',
+                padding: '8px 12px',
+                fontSize: '13px',
+                outline: 'none'
+              }}
+            >
+              <option value="Sarah Chen">Sarah Chen (Lead Specialist)</option>
+              <option value="Marcus Vance">Marcus Vance (Fraud Analyst)</option>
+              <option value="Elena Rostova">Elena Rostova (Payments Lead)</option>
+              <option value="Devon Price">Devon Price (Logistics Specialist)</option>
+              <option value="Autonomous ARGUS-Bot">Autonomous ARGUS-Bot</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setIsAssignModalOpen(false)}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary btn-sm">
+              Save Assignment
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

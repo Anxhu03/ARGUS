@@ -134,6 +134,139 @@ export function AppProvider({ children }) {
     }
   }, [addToast, triggerRefresh]);
 
+  const updateCaseStatus = useCallback(async (caseId, newStatus, reason = '') => {
+    try {
+      const updated = await api.updateCaseStatus(caseId, newStatus, reason);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'success',
+        title: 'Status Updated',
+        message: `Case ${caseId} status transitioned to "${newStatus}".`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Update Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
+  const updateCasePriority = useCallback(async (caseId, newPriority) => {
+    try {
+      const updated = await api.updateCasePriority(caseId, newPriority);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'info',
+        title: 'Priority Adjusted',
+        message: `Case ${caseId} priority set to ${newPriority}.`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Update Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
+  const assignCaseTeam = useCallback(async (caseId, team, agent) => {
+    try {
+      const updated = await api.assignCaseTeam(caseId, team, agent);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'info',
+        title: 'Assignment Updated',
+        message: `Case ${caseId} assigned to ${team} (${agent}).`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Assignment Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
+  const addCaseInternalNote = useCallback(async (caseId, note) => {
+    try {
+      const updated = await api.addCaseInternalNote(caseId, note);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'success',
+        title: 'Internal Note Added',
+        message: `Note recorded to case ${caseId} audit log.`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Note Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
+  const recordProposedResolution = useCallback(async (caseId, resolution) => {
+    try {
+      const updated = await api.updateCaseResolution(caseId, resolution);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'success',
+        title: 'Resolution Formulated',
+        message: `Proposed resolution recorded for case ${caseId}.`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Resolution Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
+  const escalateCase = useCallback(async (caseId, reason, riskLevel = 'High') => {
+    try {
+      const updated = await api.escalateCaseToHuman(caseId, reason, riskLevel);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'warning',
+        title: 'Case Escalated to Specialist',
+        message: `Case ${caseId} marked for human review (${riskLevel} Risk).`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Escalation Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
+  const approveCaseResolution = useCallback(async (caseId) => {
+    try {
+      const updated = await api.approveResolution(caseId);
+      if (selectedCaseId === caseId) {
+        setCurrentCase(updated);
+      }
+      triggerRefresh();
+      addToast({
+        type: 'success',
+        title: 'Resolution Approved',
+        message: `Case ${caseId} marked as Resolved. Automated system actions authorized.`
+      });
+      return updated;
+    } catch (err) {
+      addToast({ type: 'error', title: 'Approval Failed', message: err.message });
+      throw err;
+    }
+  }, [selectedCaseId, triggerRefresh, addToast]);
+
   const value = {
     currentView,
     setCurrentView,
@@ -158,6 +291,13 @@ export function AppProvider({ children }) {
     removeToast,
     triggerRefresh,
     startInvestigationFromSupport,
+    updateCaseStatus,
+    updateCasePriority,
+    assignCaseTeam,
+    addCaseInternalNote,
+    recordProposedResolution,
+    escalateCase,
+    approveCaseResolution,
     sidebarCollapsed,
     setSidebarCollapsed,
     toggleSidebar,
