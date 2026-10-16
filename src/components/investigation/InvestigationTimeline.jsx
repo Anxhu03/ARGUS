@@ -1,71 +1,95 @@
 import React from 'react';
-import { Check, Clock, CircleDot, AlertTriangle } from 'lucide-react';
+import { Check, Clock, CircleDot, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export default function InvestigationTimeline({ timeline = [] }) {
+  const completedCount = timeline.filter(t => t.status === 'completed').length;
+
   return (
     <div className="ref-card" style={{ padding: '20px 24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
         <div>
-          <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>Autonomous Investigation Lifecycle</h3>
-          <p style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ShieldCheck size={18} className="text-cyan" />
+            <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
+              Deterministic Investigation Lifecycle
+            </h3>
+          </div>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
             Deterministic 9-stage sequence from complaint ingestion to resolution verification
           </p>
         </div>
-        <span
-          style={{
-            fontSize: '11px',
-            padding: '2px 8px',
-            borderRadius: '9999px',
-            background: '#e0f2fe',
-            color: '#0284c7',
-            fontWeight: 600
-          }}
-        >
-          {timeline.filter(t => t.status === 'completed').length} / {timeline.length} Stages Completed
-        </span>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span
+            style={{
+              fontSize: '11px',
+              padding: '3px 10px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(6, 182, 212, 0.12)',
+              border: '1px solid var(--glass-border-cyan)',
+              color: 'var(--accent-cyan)',
+              fontWeight: 600,
+              fontFamily: 'var(--font-mono)'
+            }}
+          >
+            {completedCount} / {timeline.length} Stages Completed
+          </span>
+          <span
+            style={{
+              fontSize: '10px',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: 'var(--text-muted)',
+              border: '1px solid var(--glass-border)'
+            }}
+          >
+            Demo Sequence
+          </span>
+        </div>
       </div>
 
       {/* Horizontal / Wrapped Step Flow */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(125px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
           gap: '10px',
           position: 'relative'
         }}
       >
-        {timeline.map((item, idx) => {
+        {timeline.map((item) => {
           const isCompleted = item.status === 'completed';
           const isCurrent = item.status === 'current';
           const isPending = item.status === 'pending';
 
-          let stepColor = '#94a3b8';
-          let bgColor = '#ffffff';
-          let borderColor = '#e2e8f0';
+          let stepColor = 'var(--text-muted)';
+          let bgColor = 'var(--bg-tertiary)';
+          let borderColor = 'var(--glass-border)';
 
           if (isCompleted) {
-            stepColor = '#16a34a';
-            bgColor = '#f0fdf4';
-            borderColor = '#bbf7d0';
+            stepColor = 'var(--status-emerald)';
+            bgColor = 'rgba(16, 185, 129, 0.08)';
+            borderColor = 'rgba(16, 185, 129, 0.3)';
           } else if (isCurrent) {
-            stepColor = '#0284c7';
-            bgColor = '#e0f2fe';
-            borderColor = '#7dd3fc';
+            stepColor = 'var(--accent-cyan)';
+            bgColor = 'rgba(6, 182, 212, 0.12)';
+            borderColor = 'var(--glass-border-cyan)';
           }
 
           return (
             <div
               key={item.step}
               style={{
-                padding: '10px',
-                borderRadius: '6px',
+                padding: '12px 10px',
+                borderRadius: 'var(--radius-md)',
                 background: bgColor,
                 border: `1px solid ${borderColor}`,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px',
+                gap: '6px',
                 position: 'relative',
-                transition: 'all 0.15s ease'
+                transition: 'all var(--transition-fast)'
               }}
             >
               {/* Step Number & Icon */}
@@ -76,14 +100,15 @@ export default function InvestigationTimeline({ timeline = [] }) {
 
                 <div
                   style={{
-                    width: '18px',
-                    height: '18px',
+                    width: '20px',
+                    height: '20px',
                     borderRadius: '50%',
-                    background: isCompleted ? '#16a34a' : isCurrent ? '#0284c7' : '#f1f5f9',
+                    background: isCompleted ? 'rgba(16, 185, 129, 0.25)' : isCurrent ? 'rgba(6, 182, 212, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                    border: `1px solid ${isCompleted ? 'var(--status-emerald)' : isCurrent ? 'var(--accent-cyan)' : 'var(--glass-border)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: isCompleted || isCurrent ? '#ffffff' : '#64748b'
+                    color: isCompleted ? 'var(--status-emerald)' : isCurrent ? 'var(--accent-cyan)' : 'var(--text-faint)'
                   }}
                 >
                   {isCompleted ? (
@@ -97,11 +122,26 @@ export default function InvestigationTimeline({ timeline = [] }) {
               </div>
 
               {/* Title & Desc */}
-              <div style={{ fontSize: '11px', fontWeight: 600, color: '#0f172a', lineHeight: 1.25 }}>
+              <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.25 }}>
                 {item.title}
               </div>
-              <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.2 }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.25 }}>
                 {item.description}
+              </div>
+
+              {/* Stage status tag */}
+              <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
+                <span
+                  style={{
+                    fontSize: '9px',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    color: isCompleted ? 'var(--status-emerald)' : isCurrent ? 'var(--accent-cyan)' : 'var(--text-faint)'
+                  }}
+                >
+                  {isCompleted ? 'COMPLETED' : isCurrent ? 'IN PROGRESS' : 'QUEUED'}
+                </span>
               </div>
             </div>
           );

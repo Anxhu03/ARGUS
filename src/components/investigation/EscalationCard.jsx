@@ -6,7 +6,8 @@ import {
   ArrowRight,
   FileText,
   Sliders,
-  CheckCircle2
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 
 export default function EscalationCard({ escalation, onAction }) {
@@ -18,51 +19,54 @@ export default function EscalationCard({ escalation, onAction }) {
     <div
       className="ref-card"
       style={{
-        padding: '22px 24px',
-        border: `1px solid ${isCritical ? '#fecdd3' : '#fed7aa'}`,
-        background: isCritical ? '#fff1f2' : '#fffbeb',
-        borderLeft: `5px solid ${isCritical ? '#dc2626' : '#ea580c'}`
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        borderLeft: `5px solid ${isCritical ? 'var(--status-rose)' : 'var(--status-amber)'}`,
+        background: isCritical ? 'rgba(244, 63, 94, 0.05)' : 'rgba(245, 158, 11, 0.05)',
+        border: `1px solid ${isCritical ? 'rgba(244, 63, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              background: isCritical ? '#fee2e2' : '#ffedd5',
-              border: `1px solid ${isCritical ? '#fecdd3' : '#fed7aa'}`,
+              width: '38px',
+              height: '38px',
+              borderRadius: 'var(--radius-md)',
+              background: isCritical ? 'rgba(244, 63, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+              border: `1px solid ${isCritical ? 'rgba(244, 63, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: isCritical ? '#dc2626' : '#ea580c',
+              color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)',
               flexShrink: 0
             }}
           >
-            <ShieldAlert size={20} />
+            <ShieldAlert size={22} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: isCritical ? '#dc2626' : '#ea580c', letterSpacing: '0.06em' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)', letterSpacing: '0.06em' }}>
                 Human Review Escalation Required
               </span>
               <span
                 style={{
                   fontSize: '10px',
                   fontWeight: 700,
-                  padding: '2px 7px',
+                  padding: '1px 6px',
                   borderRadius: '4px',
-                  background: isCritical ? '#fee2e2' : '#ffedd5',
-                  color: isCritical ? '#dc2626' : '#ea580c',
+                  background: isCritical ? 'rgba(244, 63, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                  color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)',
                   textTransform: 'uppercase'
                 }}
               >
-                {escalation.riskLevel} Risk
+                {escalation.riskLevel || 'High'} Risk
               </span>
             </div>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
               Specialist Review Triggered by Policy Threshold
             </h3>
           </div>
@@ -70,8 +74,8 @@ export default function EscalationCard({ escalation, onAction }) {
 
         {escalation.assignedSpecialist && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', color: '#64748b' }}>Assigned Specialist</div>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Assigned Specialist</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
               {escalation.assignedSpecialist}
             </div>
           </div>
@@ -79,11 +83,11 @@ export default function EscalationCard({ escalation, onAction }) {
       </div>
 
       {/* Escalation Reason */}
-      <div style={{ marginBottom: '14px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: '#64748b' }}>
+      <div>
+        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
           Policy Trigger & Evidence Discrepancy
         </span>
-        <p style={{ fontSize: '12px', color: '#334155', marginTop: '4px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>
           {escalation.reason}
         </p>
       </div>
@@ -91,24 +95,25 @@ export default function EscalationCard({ escalation, onAction }) {
       {/* Recommended Action */}
       <div
         style={{
-          padding: '10px 14px',
-          borderRadius: '6px',
-          background: '#ffffff',
-          border: '1px solid #fed7aa',
+          padding: '12px 14px',
+          borderRadius: 'var(--radius-sm)',
+          background: 'var(--bg-tertiary)',
+          border: '1px solid var(--glass-border)',
           fontSize: '12px',
-          color: '#7c2d12',
-          marginBottom: '16px'
+          color: 'var(--text-primary)'
         }}
       >
-        <strong>Recommended Specialist Action: </strong>
+        <strong style={{ color: isCritical ? 'var(--status-rose)' : 'var(--status-amber)' }}>
+          Recommended Specialist Action:{' '}
+        </strong>
         {escalation.recommendedAction}
       </div>
 
       {/* Specialist Action Buttons */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', paddingTop: '4px' }}>
         <button
           className="btn btn-primary btn-sm"
-          style={{ height: '34px', background: '#16a34a', borderColor: '#15803d' }}
+          style={{ height: '36px', padding: '0 16px', gap: '6px' }}
           onClick={() => onAction('approve_override')}
         >
           <CheckCircle2 size={14} />
@@ -117,7 +122,7 @@ export default function EscalationCard({ escalation, onAction }) {
 
         <button
           className="btn btn-secondary btn-sm"
-          style={{ height: '34px' }}
+          style={{ height: '36px', padding: '0 14px', gap: '6px' }}
           onClick={() => onAction('request_evidence')}
         >
           <FileText size={14} />
@@ -126,7 +131,7 @@ export default function EscalationCard({ escalation, onAction }) {
 
         <button
           className="btn btn-secondary btn-sm"
-          style={{ height: '34px', color: '#ea580c', borderColor: '#fed7aa' }}
+          style={{ height: '36px', padding: '0 14px', gap: '6px', color: 'var(--status-amber)', borderColor: 'rgba(245, 158, 11, 0.3)' }}
           onClick={() => onAction('formal_dispute')}
         >
           <AlertTriangle size={14} />

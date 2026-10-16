@@ -25,7 +25,10 @@ export default function TopBar({ onToggleMobile }) {
     navigateToCase,
     unreadNotifications,
     setUnreadNotifications,
-    addToast
+    addToast,
+    backendStatus,
+    apiBaseUrl,
+    checkBackendHealth
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -135,21 +138,54 @@ export default function TopBar({ onToggleMobile }) {
 
       {/* Right Controls: Telemetry Pill, Notification Menu & Operator Avatar */}
       <div className="ref-header-right">
+        {/* Backend API Connection Pill */}
+        <div
+          className="ref-agent-pulse-pill"
+          title={backendStatus === 'connected' ? `FastAPI Backend online at ${apiBaseUrl}` : `FastAPI Backend offline at ${apiBaseUrl}. Running in local resilient fallback mode.`}
+          onClick={() => {
+            checkBackendHealth().then((h) => {
+              if (h.online) {
+                addToast({
+                  type: 'success',
+                  title: 'Backend API Connected',
+                  message: `Connected to ${h.service} (${apiBaseUrl}). Total cases in SQLite: ${h.database?.cases_count}.`
+                });
+              } else {
+                addToast({
+                  type: 'warning',
+                  title: 'Backend Offline (Local Fallback Active)',
+                  message: `Backend at ${apiBaseUrl} is not reachable. Operating safely in local prototype mode.`
+                });
+              }
+            });
+          }}
+          style={{
+            cursor: 'pointer',
+            borderColor: backendStatus === 'connected' ? 'rgba(16, 185, 129, 0.35)' : 'rgba(245, 158, 11, 0.35)',
+            background: backendStatus === 'connected' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)'
+          }}
+        >
+          <StatusIndicator status={backendStatus === 'connected' ? 'success' : 'warning'} size={7} pulse={backendStatus === 'connected'} />
+          <span style={{ fontSize: '11px', fontWeight: 600, color: backendStatus === 'connected' ? 'var(--status-emerald)' : 'var(--status-amber)' }}>
+            {backendStatus === 'connected' ? 'API Connected' : backendStatus === 'checking' ? 'Checking API...' : 'API Offline (Local)'}
+          </span>
+        </div>
+
         {/* Multi-Agent Swarm Telemetry Pill */}
         <div
           className="ref-agent-pulse-pill"
-          title="Parallel DAG Workers (Billing, Order, Tech, Coordinator) Active"
+          title="Parallel DAG Workers (Billing, Order, Tech, Evidence Verifier, Coordinator) Active"
           onClick={() => {
             addToast({
               type: 'info',
               title: 'Multi-Agent Telemetry Status',
-              message: '4 parallel agents online. Median consensus latency 340ms.'
+              message: '5 parallel agents online. Median consensus latency 340ms.'
             });
           }}
           style={{ cursor: 'pointer' }}
         >
           <StatusIndicator status="active" size={7} pulse />
-          <span className="pulse-text">4 Agents Active</span>
+          <span className="pulse-text">5 Agents Active</span>
         </div>
 
         {/* Notifications Dropdown */}
