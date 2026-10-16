@@ -28,6 +28,6 @@ API Documentation: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 npm install
 npm run dev
 ```
-Application URL: [http://localhost:5173](http://localhost:5173)
+Application URL: [http://localhost:3000](http://localhost:3000)
 
 For detailed developer setup, database schema, and test instructions, see [docs/BACKEND_SETUP.md](docs/BACKEND_SETUP.md).

@@ -58,7 +58,7 @@ npm install
 npm run dev
 ```
 
-- **Frontend URL**: [http://localhost:5173](http://localhost:5173)
+- **Frontend URL**: [http://localhost:3000](http://localhost:3000)
 
 ---
 
