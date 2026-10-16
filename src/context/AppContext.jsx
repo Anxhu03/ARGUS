@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { api } from '../services/api.js';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { api, API_BASE_URL } from '../services/api.js';
 
 const AppContext = createContext(null);
 
@@ -8,7 +8,12 @@ export function AppProvider({ children }) {
   const [selectedCaseId, setSelectedCaseId] = useState('ARG-1042');
   const [currentCase, setCurrentCase] = useState(null);
   const [isCaseLoading, setIsCaseLoading] = useState(false);
+  const [caseLoadError, setCaseLoadError] = useState(null);
   
+  // Backend connectivity state
+  const [backendStatus, setBackendStatus] = useState('checking'); // 'checking' | 'connected' | 'offline'
+  const [backendInfo, setBackendInfo] = useState(null);
+
   // Support state
   const [supportMode, setSupportMode] = useState('faq'); // 'faq' | 'agent'
   const [selectedFaq, setSelectedFaq] = useState(null);
@@ -26,6 +31,9 @@ export function AppProvider({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(3);
+
+  // Request race-condition guard
+  const activeFetchIdRef = useRef(0);
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed(prev => !prev);
@@ -50,32 +58,59 @@ export function AppProvider({ children }) {
     setRefreshCounter(prev => prev + 1);
   }, []);
 
-  // Fetch current case whenever selectedCaseId changes
+  // Check Backend Health on mount & refresh
+  const checkBackendHealth = useCallback(async () => {
+    try {
+      const health = await api.checkHealth();
+      if (health.online) {
+        setBackendStatus('connected');
+        setBackendInfo(health);
+      } else {
+        setBackendStatus('offline');
+        setBackendInfo(health);
+      }
+      return health;
+    } catch {
+      setBackendStatus('offline');
+      setBackendInfo(null);
+      return { online: false };
+    }
+  }, []);
+
+  useEffect(() => {
+    checkBackendHealth();
+  }, [checkBackendHealth, refreshCounter]);
+
+  // Fetch current case whenever selectedCaseId or refreshCounter changes
   useEffect(() => {
     if (!selectedCaseId) return;
-    let isMounted = true;
+    const fetchId = ++activeFetchIdRef.current;
     setIsCaseLoading(true);
+    setCaseLoadError(null);
 
     api.getCaseById(selectedCaseId)
       .then(caseData => {
-        if (isMounted) {
+        if (fetchId === activeFetchIdRef.current) {
           setCurrentCase(caseData);
           setIsCaseLoading(false);
         }
       })
       .catch(err => {
-        if (isMounted) {
+        if (fetchId === activeFetchIdRef.current) {
           console.error(err);
           setIsCaseLoading(false);
+          setCaseLoadError(err.message);
           addToast({
             type: 'error',
             title: 'Failed to load case',
-            message: `Case ${selectedCaseId} could not be retrieved.`
+            message: `Case ${selectedCaseId} could not be retrieved: ${err.message}`
           });
         }
       });
 
-    return () => { isMounted = false; };
+    return () => {
+      // Cleanup on unmount or id change
+    };
   }, [selectedCaseId, refreshCounter, addToast]);
 
   // Load KPIs
@@ -117,7 +152,9 @@ export function AppProvider({ children }) {
       addToast({
         type: 'success',
         title: `Case Created: ${newCase.id}`,
-        message: 'Billing, Order, and Technical agents deployed in parallel.'
+        message: api.isLiveBackend()
+          ? 'Case registered in backend SQLite store. Diagnostic agents deployed.'
+          : 'Case registered in local session store. Diagnostic agents deployed.'
       });
 
       setSelectedCaseId(newCase.id);
@@ -144,7 +181,7 @@ export function AppProvider({ children }) {
       addToast({
         type: 'success',
         title: 'Status Updated',
-        message: `Case ${caseId} status transitioned to "${newStatus}".`
+        message: `Case ${caseId} transitioned to "${newStatus}".`
       });
       return updated;
     } catch (err) {
@@ -275,6 +312,11 @@ export function AppProvider({ children }) {
     currentCase,
     setCurrentCase,
     isCaseLoading,
+    caseLoadError,
+    backendStatus,
+    backendInfo,
+    checkBackendHealth,
+    apiBaseUrl: API_BASE_URL,
     navigateToCase,
     navigateToSupport,
     supportMode,

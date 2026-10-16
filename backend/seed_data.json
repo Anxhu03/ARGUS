@@ -1,0 +1,2980 @@
+[
+  {
+    "id": "ARG-1042",
+    "title": "Payment successful but order remains pending with missing refund",
+    "customer": {
+      "name": "Sophia Martinez",
+      "email": "sophia.m@enterprise-cloud.io",
+      "avatar": "SM",
+      "tier": "Enterprise Tier",
+      "joinedDate": "Mar 2024",
+      "reliabilityScore": 94,
+      "reliabilityBand": "High Reliability",
+      "totalCases": 5,
+      "resolvedCases": 4,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "I completed the checkout for Order #ORD-88219 totaling $389.00 via corporate Visa at 09:14 AM. My bank shows the funds were debited and transaction ID TXN-994101 was generated. However, the order status on my dashboard is still stuck at 'Pending Payment Verification' after 6 hours, and no confirmation email or automated refund was initiated.",
+    "category": "Billing & Order Sync",
+    "priority": "High",
+    "status": "Investigating",
+    "createdAt": "2026-09-30 09:22:15",
+    "updatedAt": "2026-09-30 11:45:00",
+    "orderId": "ORD-88219",
+    "amount": "$389.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 99.2,
+        "task": "Verify payment authorization, ledger debit, and charge capture on Stripe Gateway",
+        "summary": "Payment capture confirmed by Stripe Gateway (ch_3M4zZ8891). Funds securely settled in primary merchant escrow at 09:14:22 UTC.",
+        "executionTime": "420ms",
+        "metrics": [
+          {
+            "label": "Stripe Charge ID",
+            "value": "ch_3M4zZ8891"
+          },
+          {
+            "label": "Capture Status",
+            "value": "Captured (Code 200)"
+          },
+          {
+            "label": "Ledger Delta",
+            "value": "+$389.00 (Escrow)"
+          },
+          {
+            "label": "Gateway Latency",
+            "value": "182ms"
+          }
+        ],
+        "findings": [
+          "Payment gateway authorization succeeded at 09:14:18 UTC.",
+          "Capture webhook event `charge.captured` dispatched with payload hash sha256:d891b...29a.",
+          "No chargeback or cardholder dispute has been filed.",
+          "Escrow balance confirmed intact without automatic refund reversal."
+        ]
+      },
+      "order": {
+        "agentName": "Order Agent",
+        "version": "v2.8.0",
+        "status": "Completed",
+        "confidenceScore": 97.8,
+        "task": "Inspect OMS inventory reservation, fulfillment lock, and cart transition state",
+        "summary": "Order entity ORD-88219 is paused in state `AWAITING_PAYMENT_WEBHOOK`. Reserved inventory holds (SKU-NX400, SKU-NX401) are active with 18 hours until TTL expiry.",
+        "executionTime": "310ms",
+        "metrics": [
+          {
+            "label": "OMS State",
+            "value": "AWAITING_PAYMENT"
+          },
+          {
+            "label": "Inventory Lock",
+            "value": "Active (2 Items)"
+          },
+          {
+            "label": "Warehouse Routing",
+            "value": "Hub-04 (Dallas)"
+          },
+          {
+            "label": "Lock Expiry",
+            "value": "18h remaining"
+          }
+        ],
+        "findings": [
+          "OMS created reservation session sess_998124 at 09:13:58 UTC.",
+          "State transition from `AWAITING_PAYMENT` to `ORDER_CONFIRMED` was never invoked.",
+          "Warehouse routing pipeline is waiting for confirmed state before initiating pick/pack.",
+          "Items remain securely allocated in stock inventory."
+        ]
+      },
+      "tech": {
+        "agentName": "Technical Agent",
+        "version": "v4.1.2",
+        "status": "Investigating",
+        "confidenceScore": 92.4,
+        "task": "Analyze event bus ingestion, edge webhook gateway logs, and trace drops",
+        "summary": "Discovered an ingress network timeout: Inbound Stripe webhook reached Edge API Gateway at 09:14:23 UTC, but internal Kafka message producer experienced a 504 Gateway Timeout due to pod recycling during deployment `deploy-core-sync-991`.",
+        "executionTime": "890ms",
+        "metrics": [
+          {
+            "label": "Edge Trace ID",
+            "value": "trace_881920aa912"
+          },
+          {
+            "label": "HTTP Ingress Status",
+            "value": "200 OK (Edge)"
+          },
+          {
+            "label": "Internal Forward",
+            "value": "504 Gateway Timeout"
+          },
+          {
+            "label": "Dropped Event",
+            "value": "evt_payment_captured"
+          }
+        ],
+        "findings": [
+          "Edge gateway successfully accepted incoming webhook from 54.187.174.169.",
+          "Internal routing failed: downstream service `orders-event-bridge` dropped connection due to rolling pod restart.",
+          "Dead letter queue (DLQ) hold recorded event with failure code `ERR_KAFKA_PRODUCER_DISCONNECT`.",
+          "Event was not automatically replayed due to exhausted 3x retry limit on worker pool."
+        ]
+      },
+      "coordinator": {
+        "agentName": "Coordinator & Root Cause Engine",
+        "version": "v5.0.0",
+        "status": "Synthesizing",
+        "confidenceScore": 98.1,
+        "task": "Consolidate findings across Billing, Order, and Technical agents to formulate root cause and execution plan",
+        "summary": "Consensus reached: The customer paid successfully, but the order remained stuck due to an internal webhook dispatch failure during a backend rollout.",
+        "executionTime": "180ms",
+        "metrics": [
+          {
+            "label": "Consensus Level",
+            "value": "98.1% High Confidence"
+          },
+          {
+            "label": "Contradiction Severity",
+            "value": "Zero Contradiction"
+          },
+          {
+            "label": "Recommended Path",
+            "value": "Automated Resync & Confirmation"
+          },
+          {
+            "label": "Customer Impact",
+            "value": "High (Pending Fulfill)"
+          }
+        ],
+        "findings": [
+          "Customer claim verified 100%: $389.00 payment was deducted legitimately.",
+          "No fraudulent or conflicting indicators present.",
+          "Root cause isolated to internal event bus disruption.",
+          "Actionable resolution is to force-replay the dropped webhook to transition order to confirmed state, or trigger instant compensation."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Received",
+        "desc": "Customer logged ticket via Enterprise Support portal",
+        "time": "09:22:15",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Case Classified",
+        "desc": "Categorized as Billing & Order Sync (Confidence: 99%)",
+        "time": "09:22:18",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Agents Assigned",
+        "desc": "Billing, Order, and Technical agents mobilized in parallel",
+        "time": "09:22:20",
+        "status": "completed"
+      },
+      {
+        "step": 4,
+        "title": "Evidence Retrieved",
+        "desc": "Captured Stripe charge logs, OMS state, and API gateway traces",
+        "time": "09:22:25",
+        "status": "completed"
+      },
+      {
+        "step": 5,
+        "title": "Investigation Performed",
+        "desc": "Cross-correlated gateway debits against OMS state transitions",
+        "time": "09:22:42",
+        "status": "completed"
+      },
+      {
+        "step": 6,
+        "title": "Contradictions Checked",
+        "desc": "Zero customer discrepancy; statements align with ledger records",
+        "time": "09:22:50",
+        "status": "completed"
+      },
+      {
+        "step": 7,
+        "title": "Root Cause Identified",
+        "desc": "Webhook drop during pod deployment caused synchronization freeze",
+        "time": "09:23:05",
+        "status": "completed"
+      },
+      {
+        "step": 8,
+        "title": "Resolution Generated",
+        "desc": "Replay dropped webhook event and dispatch confirmation SMS/Email",
+        "time": "09:23:15",
+        "status": "current"
+      },
+      {
+        "step": 9,
+        "title": "Human Review",
+        "desc": "System auto-approved (Risk score: 0.04/1.0)",
+        "time": "Pending",
+        "status": "pending"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-101",
+        "title": "Stripe Gateway Charge Capture",
+        "type": "Financial Record",
+        "source": "Stripe API (Live Endpoint)",
+        "timestamp": "2026-09-30 09:14:22",
+        "status": "Verified",
+        "description": "Charge object ch_3M4zZ8891 status=succeeded, currency=USD, amount=38900. Card brand: Visa (4242).",
+        "payload": {
+          "charge_id": "ch_3M4zZ8891",
+          "amount": 389,
+          "status": "succeeded",
+          "captured": true,
+          "receipt_url": "https://stripe.com/receipts/ch_3M4zZ8891"
+        }
+      },
+      {
+        "id": "ev-102",
+        "title": "OMS Database Entity ORD-88219",
+        "type": "Database Entity",
+        "source": "PostgreSQL Core Cluster",
+        "timestamp": "2026-09-30 09:14:25",
+        "status": "Verified",
+        "description": "Order record created at 09:13:58. Status flag: AWAITING_PAYMENT_CONFIRMATION. Inventory lock: Active.",
+        "payload": {
+          "order_id": "ORD-88219",
+          "status": "AWAITING_PAYMENT_CONFIRMATION",
+          "total": 389,
+          "items": 2,
+          "created_at": "2026-09-30T09:13:58Z"
+        }
+      },
+      {
+        "id": "ev-103",
+        "title": "Edge Gateway Ingress Log",
+        "type": "System Log",
+        "source": "Envoy Edge Proxy",
+        "timestamp": "2026-09-30 09:14:23",
+        "status": "Verified",
+        "description": "POST /v1/webhooks/stripe 200 OK received from Stripe verified IP address. Trace ID: trace_881920aa912.",
+        "payload": {
+          "trace_id": "trace_881920aa912",
+          "status_code": 200,
+          "source_ip": "54.187.174.169",
+          "payload_bytes": 4120
+        }
+      },
+      {
+        "id": "ev-104",
+        "title": "Kafka Event Bus Dead Letter Queue",
+        "type": "Message Queue",
+        "source": "Kafka Cluster DLQ (Topic: payment-events-dlq)",
+        "timestamp": "2026-09-30 09:14:24",
+        "status": "Verified",
+        "description": "Dropped event record evt_payment_captured with error ERR_KAFKA_PRODUCER_DISCONNECT.",
+        "payload": {
+          "topic": "payment-events-dlq",
+          "offset": 489102,
+          "error": "ERR_KAFKA_PRODUCER_DISCONNECT",
+          "attempts": 3
+        }
+      }
+    ],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "Payment gateway confirmation succeeded, but order-state synchronization failed due to webhook event drop during pod rollout.",
+      "summary": "Customer payment of $389.00 was authorized and captured cleanly on Stripe. However, at the exact instant the webhook hit internal routing, the order-event-bridge service was in a transient pod restart, causing the event to be moved into the Dead Letter Queue without updating the order state.",
+      "chain": [
+        {
+          "label": "Evidence",
+          "text": "Stripe Charge ch_3M4zZ8891 captured $389.00 at 09:14:22"
+        },
+        {
+          "label": "Finding",
+          "text": "Internal Kafka producer failed with 504 Timeout during pod rollout"
+        },
+        {
+          "label": "Root Cause",
+          "text": "OMS remained in AWAITING_PAYMENT because the confirmation webhook was deposited in DLQ"
+        }
+      ],
+      "impact": "Single-tenant webhook sync delay; customer order held in queue with stock safely reserved."
+    },
+    "resolution": {
+      "actionType": "Automated Replay & Confirmation",
+      "status": "Ready for Execution",
+      "confidenceScore": 99.4,
+      "headline": "Replay DLQ Webhook Event and Expedite Warehouse Fulfillment",
+      "reason": "Full financial proof exists with zero ambiguity. The funds are already in company accounts and warehouse stock is currently reserved.",
+      "customerFacingMessage": "Dear Sophia, thank you for alerting us. Our automated diagnostic system identified that your payment of $389.00 was successfully processed, but a brief system synchronization delay paused your order confirmation. We have rectified the synchronization, your order ORD-88219 is now confirmed, and we've upgraded your shipping to Priority Express at no cost. You will receive real-time courier tracking within the hour.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Replay DLQ message evt_payment_captured to Kafka primary topic",
+          "status": "Executed"
+        },
+        {
+          "id": "act-2",
+          "title": "Transition order ORD-88219 to CONFIRMED and release to Dallas Hub-04",
+          "status": "Executed"
+        },
+        {
+          "id": "act-3",
+          "title": "Credit customer account with $25.00 courtesy goodwill voucher",
+          "status": "Scheduled"
+        }
+      ]
+    },
+    "escalation": null,
+    "assignedTeam": "Billing & Payments Specialists",
+    "assignedAgent": "Billing Lead Specialist",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1042-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1042 classified under Billing & Order Sync. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 09:22:15"
+      },
+      {
+        "id": "not-ARG-1042-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Initial findings assembled. Awaiting final consensus and customer communication sign-off.",
+        "timestamp": "2026-09-30 11:45:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Active Diagnostic DAG",
+      "objective": "Investigate customer complaint for order ORD-88219 regarding Billing & Order Sync and determine empirical root cause.",
+      "currentStage": "Stage 05 — Parallel Investigation Active",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Final carrier tracking checkpoint digest"
+      ],
+      "nextSuggestedStep": "Synthesize agent findings through coordinator and formulate customer resolution plan."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Sophia Martinez (Enterprise Tier) verified with 94% reliability score.",
+        "Order reference: ORD-88219 associated with disputed value of $389.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [
+        "Stripe Gateway Charge Capture (Financial Record)",
+        "OMS Database Entity ORD-88219 (Database Entity)",
+        "Edge Gateway Ingress Log (System Log)",
+        "Kafka Event Bus Dead Letter Queue (Message Queue)"
+      ],
+      "contradictoryEvidence": [],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  },
+  {
+    "id": "ARG-1043",
+    "title": "Customer claims package was never delivered; Carrier claims delivery with signature",
+    "customer": {
+      "name": "Marcus Vance",
+      "email": "marcus.vance@techcorp.com",
+      "avatar": "MV",
+      "tier": "Standard Tier",
+      "joinedDate": "Jan 2025",
+      "reliabilityScore": 82,
+      "reliabilityBand": "Reliable History",
+      "totalCases": 2,
+      "resolvedCases": 2,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "Order #ORD-77402 was marked as 'Delivered' yesterday at 14:32 PM according to your tracking email, but I was home all afternoon and no courier ever knocked. My front porch camera shows no vehicle stopped between 14:00 and 15:30. I want an immediate replacement or full refund of $649.00 for the graphics card.",
+    "category": "Logistics & Delivery Dispute",
+    "priority": "Urgent",
+    "status": "Contradiction Detected",
+    "createdAt": "2026-09-30 08:15:00",
+    "updatedAt": "2026-09-30 11:30:10",
+    "orderId": "ORD-77402",
+    "amount": "$649.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 99,
+        "task": "Verify payment clearance and chargeback protection status",
+        "summary": "Payment of $649.00 settled via PayPal. Account eligible for standard logistics loss guarantee.",
+        "executionTime": "210ms",
+        "metrics": [
+          {
+            "label": "Payment Status",
+            "value": "Settled"
+          },
+          {
+            "label": "Dispute Filed",
+            "value": "None"
+          }
+        ],
+        "findings": [
+          "Original payment cleared 3 business days ago.",
+          "No third-party payment hold exists."
+        ]
+      },
+      "order": {
+        "agentName": "Order Agent",
+        "version": "v2.8.0",
+        "status": "Completed",
+        "confidenceScore": 98.5,
+        "task": "Audit warehouse dispatch, serial number assignment, and shipping label manifest",
+        "summary": "Item GPU-RTX4070-OC (Serial #SN-99812401) dispatched via FastTrack Couriers under tracking FT-99124019.",
+        "executionTime": "340ms",
+        "metrics": [
+          {
+            "label": "Carrier",
+            "value": "FastTrack Express"
+          },
+          {
+            "label": "Tracking Number",
+            "value": "FT-99124019"
+          }
+        ],
+        "findings": [
+          "Parcel weight verified at warehouse scale: 1.84 kg.",
+          "Correct delivery address applied: 442 Pinehurst Ave, Seattle, WA 98101."
+        ]
+      },
+      "tech": {
+        "agentName": "Technical Agent",
+        "version": "v4.1.2",
+        "status": "Completed",
+        "confidenceScore": 96.2,
+        "task": "Query Carrier Telemetry API for GPS coordinates of scanner at timestamp of delivery scan",
+        "summary": "Carrier scan timestamp 14:32:08 was tagged at GPS Lat: 47.6142, Lon: -122.3298. Geofence radius check reveals this coordinate is 320 meters away from customer address (442 Pinehurst Ave). Delivery photo captured a blue porch mat; customer profile shows grey concrete steps.",
+        "executionTime": "620ms",
+        "metrics": [
+          {
+            "label": "Scan Timestamp",
+            "value": "14:32:08 UTC"
+          },
+          {
+            "label": "Scanner GPS Offset",
+            "value": "320m East of Target"
+          },
+          {
+            "label": "Geofence Check",
+            "value": "FAILED (Mismatch)"
+          },
+          {
+            "label": "Porch Photo",
+            "value": "Blue mat (Address has none)"
+          }
+        ],
+        "findings": [
+          "Courier scanner GPS confirms delivery scan occurred at 784 Pinehurst Court instead of 442 Pinehurst Ave.",
+          "Signature obtained was scribbled 'M. Vance' but customer provided sworn affidavit of absence of signature.",
+          "Visual comparison confirms courier misdelivered parcel to adjacent cul-de-sac."
+        ]
+      },
+      "coordinator": {
+        "agentName": "Coordinator & Contradiction Engine",
+        "version": "v5.0.0",
+        "status": "Completed",
+        "confidenceScore": 95.8,
+        "task": "Weigh customer statement against carrier proof of delivery to isolate discrepancy",
+        "summary": "Resolved contradiction: The customer was correct. While carrier marked delivery as completed, spatial telemetry proves misdelivery to wrong residence 320m away.",
+        "executionTime": "240ms",
+        "metrics": [
+          {
+            "label": "Contradiction Status",
+            "value": "Confirmed Carrier Error"
+          },
+          {
+            "label": "Customer Fraud Risk",
+            "value": "0.02 (Negligible)"
+          },
+          {
+            "label": "Carrier Fault Score",
+            "value": "0.98 (Confirmed Misdelivery)"
+          }
+        ],
+        "findings": [
+          "Contradiction initially detected between customer claim (never received) and carrier record (delivered).",
+          "Deep telemetry investigation verified that the contradiction arose from driver error, NOT customer dishonesty.",
+          "Customer claim reliability verified."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Received",
+        "desc": "Customer disputed delivered status of graphics card ($649)",
+        "time": "08:15:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Case Classified",
+        "desc": "Classified as Logistics & Delivery Dispute (Priority: Urgent)",
+        "time": "08:15:02",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Agents Assigned",
+        "desc": "Order Agent, Tech Agent & Coordinator mobilized",
+        "time": "08:15:05",
+        "status": "completed"
+      },
+      {
+        "step": 4,
+        "title": "Evidence Retrieved",
+        "desc": "Ingested carrier delivery receipt, scanner GPS, and customer camera logs",
+        "time": "08:15:20",
+        "status": "completed"
+      },
+      {
+        "step": 5,
+        "title": "Investigation Performed",
+        "desc": "Cross-checked delivery geofence against registered home coordinates",
+        "time": "08:15:45",
+        "status": "completed"
+      },
+      {
+        "step": 6,
+        "title": "Contradiction Detected",
+        "desc": "System vs Customer: Carrier marked Delivered vs Customer porch camera empty",
+        "time": "08:16:00",
+        "status": "completed"
+      },
+      {
+        "step": 7,
+        "title": "Root Cause Identified",
+        "desc": "GPS offset proves courier misdelivered parcel 320m away on wrong street",
+        "time": "08:16:25",
+        "status": "completed"
+      },
+      {
+        "step": 8,
+        "title": "Resolution Generated",
+        "desc": "Trigger priority reshipment from local warehouse + file carrier claim",
+        "time": "08:16:40",
+        "status": "completed"
+      },
+      {
+        "step": 9,
+        "title": "Human Review",
+        "desc": "Escalated for logistics specialist sign-off on courier insurance claim",
+        "time": "08:17:00",
+        "status": "current"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-201",
+        "title": "Carrier Electronic Proof of Delivery (e-POD)",
+        "type": "Carrier Document",
+        "source": "FastTrack API v2",
+        "timestamp": "2026-09-29 14:32:08",
+        "status": "Conflicting",
+        "description": "Status marked 'DELIVERED'. Signature captured: 'M. Vance'. Photo: parcel on blue doormat.",
+        "payload": {
+          "tracking": "FT-99124019",
+          "signed_by": "M. Vance",
+          "lat": 47.6142,
+          "lon": -122.3298
+        }
+      },
+      {
+        "id": "ev-202",
+        "title": "Customer Property Geolocation Benchmark",
+        "type": "GIS Spatial Record",
+        "source": "Customer Verified Profile & Google Maps Geocoder",
+        "timestamp": "2026-09-30 08:15:30",
+        "status": "Verified",
+        "description": "Official residence coordinate: Lat 47.6169, Lon -122.3325. Distance delta to driver scan: 322.4 meters.",
+        "payload": {
+          "lat": 47.6169,
+          "lon": -122.3325,
+          "address": "442 Pinehurst Ave, Seattle, WA 98101"
+        }
+      },
+      {
+        "id": "ev-203",
+        "title": "Customer Porch Camera Video Metadata",
+        "type": "Customer Upload",
+        "source": "Nest Doorbell Uploaded Transcript",
+        "timestamp": "2026-09-29 14:00 - 15:30",
+        "status": "Verified",
+        "description": "Continuous motion log confirms zero persons or delivery vehicles entered the property during delivery window.",
+        "payload": {
+          "camera_active": true,
+          "motion_events": 0,
+          "time_range": "14:00:00 - 15:30:00"
+        }
+      }
+    ],
+    "contradiction": {
+      "headline": "Contradiction Detected: Customer Statement vs Carrier Delivery Confirmation",
+      "disclaimer": "Notice: Contradiction does NOT imply customer fraud. ARGUS autonomously audits technical records before assigning fault.",
+      "customerClaim": "Customer states package was never received and front door was unattended with no courier stopping.",
+      "systemEvidence": "Carrier FastTrack returned signed e-POD marked 'Delivered' at 14:32:08.",
+      "conflictFields": [
+        "Delivery Status",
+        "Physical Custody",
+        "GPS Geolocation Coordinates"
+      ],
+      "evidenceSources": [
+        "FastTrack Courier Telemetry API",
+        "Nest Porch Video Motion Feed",
+        "USPS Geocoder"
+      ],
+      "analysis": "Telemetry spatial mapping proved that the carrier driver scanned the barcode at 784 Pinehurst Court (320 meters East), dropping the package at an incorrect residence with an identical house number on a neighboring street.",
+      "recommendedStep": "Verify driver vehicle GPS route trail, file immediate carrier liability recovery, and approve instant customer reshipment."
+    },
+    "rootCause": {
+      "headline": "Carrier misdelivered parcel to wrong street (784 Pinehurst Ct instead of 442 Pinehurst Ave) due to driver navigation error.",
+      "summary": "Carrier e-POD was signed and scanned, but driver scanner GPS coordinates show a 320m spatial offset from customer's residence. The contradiction between customer report and carrier status was caused by third-party carrier delivery error.",
+      "chain": [
+        {
+          "label": "Customer Claim",
+          "text": "Customer reports no package received at 442 Pinehurst Ave"
+        },
+        {
+          "label": "Carrier Telemetry",
+          "text": "Driver scanned parcel 320m away at 784 Pinehurst Court"
+        },
+        {
+          "label": "Root Cause",
+          "text": "Carrier driver followed wrong street turn; misdelivered package to wrong porch"
+        }
+      ],
+      "impact": "High value merchandise ($649) missing; carrier breach of SLA; customer inconvenience."
+    },
+    "resolution": {
+      "actionType": "Expedited Replacement & Carrier Clawback",
+      "status": "Awaiting Human Sign-Off",
+      "confidenceScore": 97.2,
+      "headline": "Dispatch Immediate Replacement from Seattle Warehouse + Auto-File Carrier Claim",
+      "reason": "Carrier telemetry unambiguously proves package was dropped at wrong address. Customer is completely exonerated of fault.",
+      "customerFacingMessage": "Dear Marcus, our automated investigation completed a GPS route telemetry audit with our courier partner. We discovered that your delivery driver unfortunately misdelivered your package to a neighboring street at 14:32 yesterday. We sincerely apologize for this error. We have dispatched a replacement RTX 4070 OC from our Seattle warehouse for priority same-day delivery today at no cost to you. We are handling the courier investigation internally.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Generate replacement order ORD-77402-R from Seattle Hub with signature requirement",
+          "status": "Ready"
+        },
+        {
+          "id": "act-2",
+          "title": "Submit automated insurance clawback claim to FastTrack Logistics for $649.00",
+          "status": "Ready"
+        },
+        {
+          "id": "act-3",
+          "title": "Blacklist courier route driver tag #DRV-882 from customer's neighborhood",
+          "status": "Ready"
+        }
+      ]
+    },
+    "escalation": {
+      "required": true,
+      "reason": "High dollar value ($649.00) logistics dispute with courier misdelivery evidence requiring manual loss write-off authorization.",
+      "riskLevel": "Medium",
+      "recommendedAction": "Approve replacement dispatch and initiate carrier insurance clawback.",
+      "assignedSpecialist": "Logistics Dispute Lead (Tier 2)"
+    },
+    "assignedTeam": "Logistics & Delivery Operations",
+    "assignedAgent": "Logistics Dispute Lead",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1043-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1043 classified under Logistics & Delivery Dispute. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 08:15:00"
+      },
+      {
+        "id": "not-ARG-1043-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Statement vs telemetry contradiction detected. Discrepancy analysis active under ethical non-fraud protocol.",
+        "timestamp": "2026-09-30 11:30:10"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Contradiction Isolated",
+      "objective": "Investigate customer complaint for order ORD-77402 regarding Logistics & Delivery Dispute and determine empirical root cause.",
+      "currentStage": "Stage 06 — Contradictions Checked",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Final carrier tracking checkpoint digest"
+      ],
+      "nextSuggestedStep": "Synthesize agent findings through coordinator and formulate customer resolution plan."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Marcus Vance (Standard Tier) verified with 82% reliability score.",
+        "Order reference: ORD-77402 associated with disputed value of $649.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [
+        "Carrier Electronic Proof of Delivery (e-POD) (Carrier Document)",
+        "Customer Property Geolocation Benchmark (GIS Spatial Record)",
+        "Customer Porch Camera Video Metadata (Customer Upload)"
+      ],
+      "contradictoryEvidence": [
+        "Contradiction Detected: Customer Statement vs Carrier Delivery Confirmation"
+      ],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  },
+  {
+    "id": "ARG-1044",
+    "title": "Recurring expired nutritional supplement delivered from third-party vendor",
+    "customer": {
+      "name": "Elena Rostova",
+      "email": "elena.rostova@healthlife.net",
+      "avatar": "ER",
+      "tier": "Enterprise Tier",
+      "joinedDate": "Feb 2023",
+      "reliabilityScore": 98,
+      "reliabilityBand": "Exemplary Reliability",
+      "totalCases": 8,
+      "resolvedCases": 8,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "I ordered 3 bottles of PureVital Omega-3 (Order #ORD-66102). Upon arrival today, all three bottles have a manufacturer batch stamp showing an expiration date of June 2025 (4 months ago!). This is the second time this vendor has sent expired goods to our corporate fitness facility.",
+    "category": "Product Quality & Seller Compliance",
+    "priority": "High",
+    "status": "Human Review",
+    "createdAt": "2026-09-30 07:45:00",
+    "updatedAt": "2026-09-30 10:15:00",
+    "orderId": "ORD-66102",
+    "amount": "$142.50",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 100,
+        "task": "Validate refund authorization and vendor chargeback penalty",
+        "summary": "Authorized instant $142.50 refund. Assessed $50.00 vendor compliance penalty to seller escrow.",
+        "executionTime": "190ms",
+        "metrics": [
+          {
+            "label": "Refund Amount",
+            "value": "$142.50"
+          },
+          {
+            "label": "Vendor Penalty",
+            "value": "$50.00"
+          }
+        ],
+        "findings": [
+          "Instant refund sanctioned under SafeProduct Policy."
+        ]
+      },
+      "order": {
+        "agentName": "Order Agent",
+        "version": "v2.8.0",
+        "status": "Completed",
+        "confidenceScore": 99.1,
+        "task": "Identify merchant, batch number, and inventory warehouse origin",
+        "summary": "Vendor identified as 'Apex Nutrition LLC' (Merchant ID: MERCH-8812). Batch: LOT-2023-06A.",
+        "executionTime": "280ms",
+        "metrics": [
+          {
+            "label": "Vendor",
+            "value": "Apex Nutrition LLC"
+          },
+          {
+            "label": "Batch ID",
+            "value": "LOT-2023-06A"
+          }
+        ],
+        "findings": [
+          "Vendor fulfilled from third-party warehouse in Reno, NV.",
+          "Cross-correlated with 14 other complaints in the past 14 days."
+        ]
+      },
+      "tech": {
+        "agentName": "Technical Agent",
+        "version": "v4.1.2",
+        "status": "Completed",
+        "confidenceScore": 98.6,
+        "task": "Run Optical Character Recognition (OCR) on customer uploaded bottle photo",
+        "summary": "Vision OCR confirmed text: 'EXP: 06/2025 | LOT: 2023-06A'. Bottle seal condition: intact.",
+        "executionTime": "510ms",
+        "metrics": [
+          {
+            "label": "OCR Confidence",
+            "value": "98.6%"
+          },
+          {
+            "label": "Extracted Expiry",
+            "value": "06/2025"
+          }
+        ],
+        "findings": [
+          "Extracted expiration date is 4 months past current date.",
+          "Image metadata shows capture at 07:38 AM with no tampering artifacts."
+        ]
+      },
+      "coordinator": {
+        "agentName": "Coordinator & Pattern Engine",
+        "version": "v5.0.0",
+        "status": "Completed",
+        "confidenceScore": 99.4,
+        "task": "Correlate with multi-case intelligence database for seller compliance pattern",
+        "summary": "CRITICAL PATTERN TRIGGERED: Seller Apex Nutrition LLC has 14 verified complaints for LOT-2023-06A expired products. System recommends quarantine of seller catalog.",
+        "executionTime": "220ms",
+        "metrics": [
+          {
+            "label": "Pattern ID",
+            "value": "PAT-EXPIRED-SELLER-01"
+          },
+          {
+            "label": "Severity",
+            "value": "High Compliance Risk"
+          }
+        ],
+        "findings": [
+          "Sufficient evidence to trigger automated seller storefront suspension."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Received",
+        "desc": "Customer reported expired health supplements with batch photo",
+        "time": "07:45:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Case Classified",
+        "desc": "Product Quality & Seller Compliance (High Severity)",
+        "time": "07:45:04",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Agents Assigned",
+        "desc": "Order, Tech (Vision OCR), Billing & Coordinator mobilized",
+        "time": "07:45:07",
+        "status": "completed"
+      },
+      {
+        "step": 4,
+        "title": "Evidence Retrieved",
+        "desc": "Extracted bottle image, seller consignment history, batch numbers",
+        "time": "07:45:25",
+        "status": "completed"
+      },
+      {
+        "step": 5,
+        "title": "Investigation Performed",
+        "desc": "OCR verified expired stamp: 06/2025. Correlated vendor lot history",
+        "time": "07:45:50",
+        "status": "completed"
+      },
+      {
+        "step": 6,
+        "title": "Contradictions Checked",
+        "desc": "Zero contradiction. Expiry verified against manufacturer database",
+        "time": "07:46:10",
+        "status": "completed"
+      },
+      {
+        "step": 7,
+        "title": "Root Cause Identified",
+        "desc": "Vendor failed FIFO rotation; shipped outdated batch LOT-2023-06A",
+        "time": "07:46:30",
+        "status": "completed"
+      },
+      {
+        "step": 8,
+        "title": "Resolution Generated",
+        "desc": "Full refund + vendor quarantine + credit voucher",
+        "time": "07:46:45",
+        "status": "completed"
+      },
+      {
+        "step": 9,
+        "title": "Human Review",
+        "desc": "Vendor compliance review requested for account suspension",
+        "time": "07:47:00",
+        "status": "current"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-301",
+        "title": "Customer Bottle Label Photo OCR",
+        "type": "Vision Analysis",
+        "source": "ARGUS Vision OCR Engine",
+        "timestamp": "2026-09-30 07:45:22",
+        "status": "Verified",
+        "description": "High resolution macro photo of bottle bottom. OCR detected text: 'MFG 06/23 EXP 06/25 LOT 2023-06A'.",
+        "payload": {
+          "ocr_text": "EXP: 06/2025 LOT 2023-06A",
+          "confidence": 0.986,
+          "tampered": false
+        }
+      },
+      {
+        "id": "ev-302",
+        "title": "Seller Consignment Inventory Ledger",
+        "type": "Warehouse Log",
+        "source": "Reno 3PL Fulfillment Partner",
+        "timestamp": "2026-09-28 11:20:00",
+        "status": "Verified",
+        "description": "Stock lot intake record shows Apex Nutrition imported 800 units of LOT-2023-06A on July 2023 with no subsequent inventory audit.",
+        "payload": {
+          "intake_date": "2023-07-12",
+          "lot": "LOT-2023-06A",
+          "units_remaining": 184
+        }
+      }
+    ],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "Seller Apex Nutrition failed First-In-First-Out (FIFO) stock management, shipping expired lot LOT-2023-06A.",
+      "summary": "Optical OCR analysis confirms product expiration date of June 2025. Cross-case intelligence indicates 14 identical cases from this seller in the last 14 days, demonstrating a systematic warehouse oversight by the merchant.",
+      "chain": [
+        {
+          "label": "Vision Evidence",
+          "text": "Customer photo OCR confirms EXP: 06/2025 on LOT-2023-06A"
+        },
+        {
+          "label": "Inventory Audit",
+          "text": "Seller warehouse retained 184 expired units without audit"
+        },
+        {
+          "label": "Root Cause",
+          "text": "Vendor neglected stock rotation and shipped obsolete inventory"
+        }
+      ],
+      "impact": "Regulatory health & safety violation; vendor trust breach; customer dissatisfaction."
+    },
+    "resolution": {
+      "actionType": "Instant Refund & Vendor Quarantine",
+      "status": "Approved",
+      "confidenceScore": 99.8,
+      "headline": "Full $142.50 Refund Issued + Seller SKU Quarantined",
+      "reason": "Definitive visual evidence with zero contradiction. Seller has breached marketplace quality terms.",
+      "customerFacingMessage": "Dear Elena, thank you for bringing this unacceptable situation to our attention. We have immediately refunded $142.50 to your corporate payment method and applied a $30.00 store credit. We have taken immediate action to quarantine all products from this seller pending a formal quality investigation. You do not need to return the bottles; please safely dispose of them.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Issue full refund of $142.50 to customer card",
+          "status": "Executed"
+        },
+        {
+          "id": "act-2",
+          "title": "Quarantine SKU PureVital Omega-3 from Seller Apex Nutrition",
+          "status": "Executed"
+        },
+        {
+          "id": "act-3",
+          "title": "Dispatch automated audit warning to Apex Nutrition LLC",
+          "status": "Executed"
+        }
+      ]
+    },
+    "escalation": {
+      "required": true,
+      "reason": "Repeated expired product incident (Pattern PAT-EXPIRED-SELLER-01) requiring Vendor Trust & Safety team to sanction merchant.",
+      "riskLevel": "High",
+      "recommendedAction": "Impose 14-day storefront freeze on Apex Nutrition LLC and demand certified warehouse audit.",
+      "assignedSpecialist": "Trust & Safety Compliance Officer"
+    },
+    "assignedTeam": "Trust & Safety Compliance",
+    "assignedAgent": "Compliance Officer",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1044-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1044 classified under Product Quality & Seller Compliance. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 07:45:00"
+      },
+      {
+        "id": "not-ARG-1044-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Case flagged for human specialist review due to policy threshold. Telemetry evidence assembled for supervisor sign-off.",
+        "timestamp": "2026-09-30 10:15:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Awaiting Specialist Review",
+      "objective": "Investigate customer complaint for order ORD-66102 regarding Product Quality & Seller Compliance and determine empirical root cause.",
+      "currentStage": "Stage 09 — Specialist Review",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Final carrier tracking checkpoint digest"
+      ],
+      "nextSuggestedStep": "Review contradiction matrix and approve specialist override or insurance dispute."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Elena Rostova (Enterprise Tier) verified with 98% reliability score.",
+        "Order reference: ORD-66102 associated with disputed value of $142.50.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [
+        "Customer Bottle Label Photo OCR (Vision Analysis)",
+        "Seller Consignment Inventory Ledger (Warehouse Log)"
+      ],
+      "contradictoryEvidence": [],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  },
+  {
+    "id": "ARG-1045",
+    "title": "Double billing charged on annual SaaS enterprise renewal",
+    "customer": {
+      "name": "David K. Chen",
+      "email": "david.chen@synergycorp.com",
+      "avatar": "DC",
+      "tier": "Enterprise Tier",
+      "joinedDate": "Nov 2022",
+      "reliabilityScore": 99,
+      "reliabilityBand": "Exemplary Reliability",
+      "totalCases": 3,
+      "resolvedCases": 3,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "Our annual enterprise subscription renewed yesterday on card ending in 8812. We were charged $2,400.00 at 04:00 UTC and another $2,400.00 at 04:02 UTC for the exact same seat license. We need the second duplicate charge reversed immediately.",
+    "category": "Billing & Subscriptions",
+    "priority": "High",
+    "status": "Resolved",
+    "createdAt": "2026-09-29 16:30:00",
+    "updatedAt": "2026-09-29 17:05:00",
+    "orderId": "SUB-88192-ANNUAL",
+    "amount": "$2,400.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "completed",
+        "progress": 100,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 100,
+        "task": "Check Stripe invoices and authorization double-dips",
+        "summary": "Identified two identical charges (ch_99A1 and ch_99A2) for $2,400.00 each within 124 seconds.",
+        "executionTime": "180ms",
+        "metrics": [
+          {
+            "label": "Charge 1",
+            "value": "ch_99A1 ($2,400)"
+          },
+          {
+            "label": "Charge 2",
+            "value": "ch_99A2 ($2,400)"
+          }
+        ],
+        "findings": [
+          "Duplicate charge confirmed on same subscription ID."
+        ]
+      },
+      "order": {
+        "agentName": "Order Agent",
+        "version": "v2.8.0",
+        "status": "Completed",
+        "confidenceScore": 100,
+        "task": "Check seat license allocation",
+        "summary": "License pool only credited once for 50 seats. Second charge did not grant additional seats.",
+        "executionTime": "120ms",
+        "metrics": [
+          {
+            "label": "Allocated Seats",
+            "value": "50"
+          }
+        ],
+        "findings": [
+          "Customer only received one term renewal."
+        ]
+      },
+      "tech": {
+        "agentName": "Technical Agent",
+        "version": "v4.1.2",
+        "status": "Completed",
+        "confidenceScore": 99.2,
+        "task": "Analyze cron scheduler execution logs",
+        "summary": "Distributed lock `sub_renew_lock_88192` expired prematurely before primary worker finished processing, causing secondary worker to execute renewal duplicate.",
+        "executionTime": "310ms",
+        "metrics": [
+          {
+            "label": "Lock TTL",
+            "value": "30s (Too Short)"
+          },
+          {
+            "label": "Execution Time",
+            "value": "42s"
+          }
+        ],
+        "findings": [
+          "Distributed lock race condition identified in billing worker."
+        ]
+      },
+      "coordinator": {
+        "agentName": "Coordinator",
+        "version": "v5.0.0",
+        "status": "Completed",
+        "confidenceScore": 100,
+        "task": "Synthesize findings and execute instant void",
+        "summary": "Auto-resolved: Duplicate charge voided prior to bank settlement.",
+        "executionTime": "90ms",
+        "metrics": [
+          {
+            "label": "Auto-Resolved",
+            "value": "YES"
+          }
+        ],
+        "findings": [
+          "Refund executed within 4 minutes."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Received",
+        "desc": "Customer noticed duplicate $2,400 line item",
+        "time": "16:30:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Case Classified",
+        "desc": "Subscription Billing Duplicate",
+        "time": "16:30:02",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Agents Assigned",
+        "desc": "Billing & Tech agents deployed",
+        "time": "16:30:05",
+        "status": "completed"
+      },
+      {
+        "step": 4,
+        "title": "Evidence Retrieved",
+        "desc": "Dual invoice records retrieved from Stripe API",
+        "time": "16:30:15",
+        "status": "completed"
+      },
+      {
+        "step": 5,
+        "title": "Investigation Performed",
+        "desc": "Verified lock race condition in renewal worker",
+        "time": "16:30:30",
+        "status": "completed"
+      },
+      {
+        "step": 6,
+        "title": "Contradictions Checked",
+        "desc": "Zero contradiction. Claim 100% verified",
+        "time": "16:30:40",
+        "status": "completed"
+      },
+      {
+        "step": 7,
+        "title": "Root Cause Identified",
+        "desc": "Distributed lock TTL timeout triggered duplicate runner",
+        "time": "16:30:55",
+        "status": "completed"
+      },
+      {
+        "step": 8,
+        "title": "Resolution Generated",
+        "desc": "Instant void of charge ch_99A2",
+        "time": "16:31:10",
+        "status": "completed"
+      },
+      {
+        "step": 9,
+        "title": "Resolved",
+        "desc": "Customer notified and funds unlocked",
+        "time": "16:32:00",
+        "status": "completed"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-401",
+        "title": "Dual Stripe Transaction Receipts",
+        "type": "Financial Record",
+        "source": "Stripe Dashboard",
+        "timestamp": "2026-09-29 04:00 & 04:02",
+        "status": "Verified",
+        "description": "Charge 1: $2,400.00 at 04:00:12 UTC. Charge 2: $2,400.00 at 04:02:16 UTC.",
+        "payload": {
+          "ch_1": "ch_99A1",
+          "ch_2": "ch_99A2",
+          "delta_sec": 124
+        }
+      }
+    ],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "Distributed lock race condition caused duplicate billing cron execution.",
+      "summary": "The renewal cron job took 42 seconds to complete due to slow external gateway responses. The Redis lock TTL was configured for only 30 seconds, leading a fallback worker to acquire the lock and bill the invoice a second time.",
+      "chain": [
+        {
+          "label": "Gateway Log",
+          "text": "Stripe processed two charges ch_99A1 and ch_99A2"
+        },
+        {
+          "label": "Redis Lock",
+          "text": "Lock sub_renew_lock expired at 30s while worker was still running"
+        },
+        {
+          "label": "Root Cause",
+          "text": "Second worker launched and submitted duplicate charge"
+        }
+      ],
+      "impact": "Duplicate authorization against client credit facility."
+    },
+    "resolution": {
+      "actionType": "Instant Void & Lock Config Update",
+      "status": "Resolved",
+      "confidenceScore": 100,
+      "headline": "Duplicate Charge $2,400 Voided Instantly",
+      "reason": "Clear server-side race condition. Void executed before daily bank settlement batch.",
+      "customerFacingMessage": "Dear David, we have identified a duplicate charge caused by an automated renewal task timing issue. We have immediately voided the second $2,400.00 transaction (ch_99A2). It will not appear on your credit card statement. Your 50 Enterprise seats are fully active through September 2027.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Executed Stripe API void on ch_99A2",
+          "status": "Executed"
+        },
+        {
+          "id": "act-2",
+          "title": "Adjusted Redis distributed lock TTL from 30s to 180s",
+          "status": "Executed"
+        }
+      ]
+    },
+    "escalation": null,
+    "assignedTeam": "Billing & Payments Specialists",
+    "assignedAgent": "Billing Lead Specialist",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1045-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1045 classified under Billing & Subscriptions. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-29 16:30:00"
+      },
+      {
+        "id": "not-ARG-1045-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Resolution approved and verified. Automated internal remediation dispatched successfully.",
+        "timestamp": "2026-09-29 17:05:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Resolved & Closed",
+      "objective": "Investigate customer complaint for order SUB-88192-ANNUAL regarding Billing & Subscriptions and determine empirical root cause.",
+      "currentStage": "Stage 09 — Finalized & Verified",
+      "openQuestions": [],
+      "pendingEvidence": [],
+      "nextSuggestedStep": "Investigation concluded. No further action needed."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account David K. Chen (Enterprise Tier) verified with 99% reliability score.",
+        "Order reference: SUB-88192-ANNUAL associated with disputed value of $2,400.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [],
+      "supportingEvidence": [
+        "Dual Stripe Transaction Receipts (Financial Record)"
+      ],
+      "contradictoryEvidence": [],
+      "missingInfo": [],
+      "confidenceStatus": "100% Fully Verified"
+    }
+  },
+  {
+    "id": "ARG-1046",
+    "title": "Wrong item delivered: Received 32GB RAM stick instead of 1TB NVMe SSD",
+    "customer": {
+      "name": "Aisha Patel",
+      "email": "aisha.patel@designstudio.co",
+      "avatar": "AP",
+      "tier": "Standard Tier",
+      "joinedDate": "Aug 2024",
+      "reliabilityScore": 89,
+      "reliabilityBand": "Reliable History",
+      "totalCases": 1,
+      "resolvedCases": 1,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "I opened package tracking TRK-88192 expectantly to install my new 1TB NVMe SSD for a design project. Inside the sealed cardboard envelope was a DDR5 32GB Desktop RAM module instead. The packing slip says NVMe SSD, but the barcode on the plastic clam shell is for RAM.",
+    "category": "Warehouse Picking & Fulfillment",
+    "priority": "Medium",
+    "status": "Evidence Required",
+    "createdAt": "2026-09-30 06:10:00",
+    "updatedAt": "2026-09-30 09:30:00",
+    "orderId": "ORD-99120",
+    "amount": "$129.99",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 98,
+        "task": "Check price differential between ordered item and received item",
+        "summary": "Ordered: 1TB NVMe SSD ($129.99). Received item: DDR5 32GB RAM ($134.99). Values closely matched.",
+        "executionTime": "140ms",
+        "metrics": [
+          {
+            "label": "Ordered Price",
+            "value": "$129.99"
+          },
+          {
+            "label": "Received Value",
+            "value": "$134.99"
+          }
+        ],
+        "findings": [
+          "No malicious value inflation detected."
+        ]
+      },
+      "order": {
+        "agentName": "Order Agent",
+        "version": "v2.8.0",
+        "status": "Investigating",
+        "confidenceScore": 91.2,
+        "task": "Verify warehouse bin barcode mapping at Memphis Central Fulfillment Hub",
+        "summary": "Investigating bin adjacent picking errors. Bin B-14 (SSD) is located directly adjacent to Bin B-15 (RAM).",
+        "executionTime": "390ms",
+        "metrics": [
+          {
+            "label": "Warehouse Bin",
+            "value": "Memphis Hub Bin B-14"
+          },
+          {
+            "label": "Picker ID",
+            "value": "PICK-4491"
+          }
+        ],
+        "findings": [
+          "Picker scanning logs show a barcode manual override at 14:12 UTC."
+        ]
+      },
+      "tech": {
+        "agentName": "Technical Agent",
+        "version": "v4.1.2",
+        "status": "Waiting",
+        "confidenceScore": 85,
+        "task": "Retrieve overhead video footage from packing station #04",
+        "summary": "Awaiting video archive unfreeze request.",
+        "executionTime": "Pending",
+        "metrics": [
+          {
+            "label": "Station Cam",
+            "value": "CAM-PACK-04"
+          }
+        ],
+        "findings": [
+          "Awaiting customer barcode photo upload for confirmation."
+        ]
+      },
+      "coordinator": {
+        "agentName": "Coordinator",
+        "version": "v5.0.0",
+        "status": "Waiting",
+        "confidenceScore": 88,
+        "task": "Coordinate return exchange",
+        "summary": "Dynamic evidence protocol triggered: requesting photo of received item barcode.",
+        "executionTime": "Pending",
+        "metrics": [
+          {
+            "label": "Protocol",
+            "value": "Recommended Evidence Upload"
+          }
+        ],
+        "findings": [
+          "Will auto-dispatch correct SSD upon barcode snapshot verification."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Received",
+        "desc": "Customer received RAM module instead of ordered SSD",
+        "time": "06:10:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Case Classified",
+        "desc": "Warehouse Picking Discrepancy",
+        "time": "06:10:03",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Agents Assigned",
+        "desc": "Order and Tech agents assigned",
+        "time": "06:10:08",
+        "status": "completed"
+      },
+      {
+        "step": 4,
+        "title": "Evidence Retrieved",
+        "desc": "Retrieved picker scan logs and warehouse bin coordinates",
+        "time": "06:10:30",
+        "status": "completed"
+      },
+      {
+        "step": 5,
+        "title": "Dynamic Protocol Triggered",
+        "desc": "Customer requested to upload quick snapshot of product barcode",
+        "time": "06:11:00",
+        "status": "current"
+      },
+      {
+        "step": 6,
+        "title": "Contradictions Checked",
+        "desc": "Pending barcode upload",
+        "time": "Pending",
+        "status": "pending"
+      },
+      {
+        "step": 7,
+        "title": "Root Cause Identified",
+        "desc": "Picker bin adjacent crossover",
+        "time": "Pending",
+        "status": "pending"
+      },
+      {
+        "step": 8,
+        "title": "Resolution Generated",
+        "desc": "Instant replacement + prepaid return label",
+        "time": "Pending",
+        "status": "pending"
+      },
+      {
+        "step": 9,
+        "title": "Human Review",
+        "desc": "Not required if barcode matches RAM SKU",
+        "time": "Pending",
+        "status": "pending"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-501",
+        "title": "Warehouse Picking Scanner Log",
+        "type": "Warehouse Log",
+        "source": "WMS Scan Engine",
+        "timestamp": "2026-09-29 14:12:10",
+        "status": "Pending",
+        "description": "Picker PICK-4491 utilized manual barcode bypass on Bin B-14.",
+        "payload": {
+          "bin": "B-14",
+          "action": "BYPASS_SCAN",
+          "timestamp": "14:12:10"
+        }
+      }
+    ],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "System state synchronization discrepancy under active diagnostic evaluation.",
+      "summary": "Investigation coordinator detected latency between transaction capture and downstream event dispatch. Telemetry is being evaluated to isolate root cause.",
+      "chain": [
+        {
+          "label": "Customer Claim",
+          "text": "Dispute filed regarding Warehouse Picking & Fulfillment"
+        },
+        {
+          "label": "Telemetry Finding",
+          "text": "Database state holds uncommitted reservation lock"
+        },
+        {
+          "label": "Diagnosis",
+          "text": "Transient event dispatch timeout between distributed workers"
+        }
+      ],
+      "impact": "Order held in staging queue without automated customer update.",
+      "confidenceScore": 92,
+      "requiresHumanReview": false,
+      "supportingFindings": [
+        "OMS database lock verified",
+        "Gateway payment cleared"
+      ],
+      "missingInfo": [
+        "Worker reconnect trace"
+      ]
+    },
+    "resolution": {
+      "actionType": "Autonomous Order Verification & Customer Resync",
+      "status": "Formulated",
+      "confidenceScore": 95,
+      "headline": "Authorize Expedited Resync and Issue Customer Update",
+      "reason": "Zero fraudulent indicators detected. Customer veracity substantiated by historic reliability score.",
+      "customerFacingMessage": "Dear Aisha, thank you for contacting us. ARGUS has audited your case (ARG-1046) across our Billing, Order, and Technical systems. We have verified your records and our operations team has taken immediate corrective action.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Release inventory hold and dispatch priority courier tracking",
+          "status": "Ready"
+        },
+        {
+          "id": "act-2",
+          "title": "Apply courtesy loyalty credit to customer account",
+          "status": "Scheduled"
+        }
+      ],
+      "resolutionNotes": "System approved under automated resolution ceiling policy.",
+      "humanEscalationStatus": "None",
+      "escalationReason": "Standard autonomous processing",
+      "nextAction": "Execute approved resolution"
+    },
+    "escalation": null,
+    "assignedTeam": "Warehouse Operations & Inventory",
+    "assignedAgent": "Warehouse Inventory Lead",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1046-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1046 classified under Warehouse Picking & Fulfillment. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 06:10:00"
+      },
+      {
+        "id": "not-ARG-1046-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Initial findings assembled. Awaiting final consensus and customer communication sign-off.",
+        "timestamp": "2026-09-30 09:30:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Active Diagnostic DAG",
+      "objective": "Investigate customer complaint for order ORD-99120 regarding Warehouse Picking & Fulfillment and determine empirical root cause.",
+      "currentStage": "Stage 05 — Parallel Investigation Active",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Customer photo upload / document verification"
+      ],
+      "nextSuggestedStep": "Synthesize agent findings through coordinator and formulate customer resolution plan."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Aisha Patel (Standard Tier) verified with 89% reliability score.",
+        "Order reference: ORD-99120 associated with disputed value of $129.99.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [
+        "Warehouse Picking Scanner Log (Warehouse Log)"
+      ],
+      "contradictoryEvidence": [],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  },
+  {
+    "id": "ARG-1047",
+    "title": "Suspicious return package weight discrepancy detected at carrier intake",
+    "customer": {
+      "name": "Jordan Lee",
+      "email": "jordan.lee@apexmail.com",
+      "avatar": "JL",
+      "tier": "Standard Tier",
+      "joinedDate": "Jul 2025",
+      "reliabilityScore": 68,
+      "reliabilityBand": "Moderate Review Band",
+      "totalCases": 4,
+      "resolvedCases": 2,
+      "disputedCases": 2,
+      "isUserSubmitted": false
+    },
+    "complaintText": "I returned the Apple MacBook Pro 16-inch ($2,899.00) using your prepaid return label 5 days ago. The tracking shows it arrived at your return center, but I still haven't received my refund.",
+    "category": "Returns & Asset Verification",
+    "priority": "Urgent",
+    "status": "Human Review",
+    "createdAt": "2026-09-30 05:00:00",
+    "updatedAt": "2026-09-30 11:10:00",
+    "orderId": "RET-449102",
+    "amount": "$2,899.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 99,
+        "task": "Hold refund until asset inspection completion",
+        "summary": "Refund of $2,899.00 safely held under High Value Asset Protection policy.",
+        "executionTime": "120ms",
+        "metrics": [
+          {
+            "label": "Held Amount",
+            "value": "$2,899.00"
+          }
+        ],
+        "findings": [
+          "High-value policy requires physical scale and serial verification."
+        ]
+      },
+      "order": {
+        "agentName": "Order Agent",
+        "version": "v2.8.0",
+        "status": "Completed",
+        "confidenceScore": 97.4,
+        "task": "Compare outbound dispatch weight vs inbound return weight",
+        "summary": "CRITICAL WEIGHT DISCREPANCY: Outbound dispatch weight was 3.24 kg (Laptop + Charger). Inbound return package scale weight is 0.42 kg.",
+        "executionTime": "240ms",
+        "metrics": [
+          {
+            "label": "Outbound Weight",
+            "value": "3.24 kg"
+          },
+          {
+            "label": "Inbound Return Weight",
+            "value": "0.42 kg"
+          },
+          {
+            "label": "Delta Deficit",
+            "value": "-2.82 kg (-87%)"
+          }
+        ],
+        "findings": [
+          "Package weight missing 87% of expected asset mass.",
+          "Inbound box dimensions do not match manufacturer Apple packaging."
+        ]
+      },
+      "tech": {
+        "agentName": "Technical Agent",
+        "version": "v4.1.2",
+        "status": "Completed",
+        "confidenceScore": 99.1,
+        "task": "Inspect return warehouse intake photo and conveyor scale sensor data",
+        "summary": "Conveyor photo reveals return box contained 3 promotional magazines and crumpled newspaper with no electronics present.",
+        "executionTime": "450ms",
+        "metrics": [
+          {
+            "label": "Return Scanner Scale",
+            "value": "Verified Calibrated 0.42kg"
+          }
+        ],
+        "findings": [
+          "Security camera footage from intake lane 02 archived.",
+          "Tamper evident tape applied in transit."
+        ]
+      },
+      "coordinator": {
+        "agentName": "Coordinator",
+        "version": "v5.0.0",
+        "status": "Completed",
+        "confidenceScore": 98.5,
+        "task": "Synthesize contradiction and formulate human review escalation",
+        "summary": "Contradiction established: Customer claims return of 16-inch MacBook Pro, but package delivered weighs 0.42kg containing paper filler. Escalate to Asset Protection for verification before denying refund.",
+        "executionTime": "180ms",
+        "metrics": [
+          {
+            "label": "Escalation Status",
+            "value": "Asset Protection Active"
+          }
+        ],
+        "findings": [
+          "Contradiction identified between customer statement and physical weight telemetry.",
+          "Neutral procedure: request carrier transit police investigation and customer serial number proof."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Received",
+        "desc": "Customer queried status of $2,899 MacBook return refund",
+        "time": "05:00:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Case Classified",
+        "desc": "Returns & High Value Asset Verification",
+        "time": "05:00:02",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Agents Assigned",
+        "desc": "Billing, Order, Tech & Coordinator mobilized",
+        "time": "05:00:05",
+        "status": "completed"
+      },
+      {
+        "step": 4,
+        "title": "Evidence Retrieved",
+        "desc": "Retrieved automated scale telemetry and intake camera stills",
+        "time": "05:00:20",
+        "status": "completed"
+      },
+      {
+        "step": 5,
+        "title": "Investigation Performed",
+        "desc": "Discovered 87% package weight deficit (-2.82 kg)",
+        "time": "05:00:45",
+        "status": "completed"
+      },
+      {
+        "step": 6,
+        "title": "Contradiction Detected",
+        "desc": "Claimed MacBook Pro vs Inbound parcel weighing only 0.42 kg",
+        "time": "05:01:10",
+        "status": "completed"
+      },
+      {
+        "step": 7,
+        "title": "Root Cause Identified",
+        "desc": "Asset missing from package; potential in-transit theft or wrongful shipment",
+        "time": "05:01:30",
+        "status": "completed"
+      },
+      {
+        "step": 8,
+        "title": "Resolution Formulated",
+        "desc": "Hold refund pending carrier loss investigation",
+        "time": "05:01:50",
+        "status": "completed"
+      },
+      {
+        "step": 9,
+        "title": "Human Escalation",
+        "desc": "Assigned to Asset Protection Senior Specialist",
+        "time": "05:02:00",
+        "status": "current"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-601",
+        "title": "Intake Conveyor Belt Scale Telemetry",
+        "type": "Hardware Sensor Record",
+        "source": "Louisville Return Sorting Facility (Lane 02)",
+        "timestamp": "2026-09-30 04:45:12",
+        "status": "Verified",
+        "description": "Laser volume scanner: 22x15x6 cm. High precision digital scale reading: 420.5 grams.",
+        "payload": {
+          "weight_grams": 420.5,
+          "expected_grams": 3240,
+          "discrepancy_percent": -87
+        }
+      },
+      {
+        "id": "ev-602",
+        "title": "Inbound Unboxing Camera Still",
+        "type": "Security Footage",
+        "source": "Warehouse Inspection High-Def Camera CAM-IN-02",
+        "timestamp": "2026-09-30 04:46:00",
+        "status": "Verified",
+        "description": "Package opened by certified inspector; contents identified as paper packing filler without laptop or electronics.",
+        "payload": {
+          "inspector_id": "INSP-882",
+          "contents": "Paper print material",
+          "tamper_evident": true
+        }
+      }
+    ],
+    "contradiction": {
+      "headline": "Critical Contradiction: Customer Claim of MacBook Return vs Physical Weight Telemetry",
+      "disclaimer": "Notice: Contradiction does NOT imply intentional fraud. In-transit theft or accidental box swap is considered during investigation.",
+      "customerClaim": "Customer states the $2,899 MacBook Pro was packaged and dropped off at carrier kiosk.",
+      "systemEvidence": "Automated warehouse laser scale recorded package weight of 0.42 kg (outbound unit was 3.24 kg). Unboxing photos confirm absence of laptop.",
+      "conflictFields": [
+        "Physical Mass",
+        "Package Contents",
+        "Asset Presence"
+      ],
+      "evidenceSources": [
+        "Louisville Facility Conveyor Scale",
+        "Intake CCTV Feed",
+        "UPS Drop-off Receipt Scan"
+      ],
+      "analysis": "The parcel received weighs less than 15% of the genuine hardware. A formal inquiry with carrier security is required to verify if package was tampered with during transit or if customer dropped off wrong parcel.",
+      "recommendedStep": "Keep refund on hold; request drop-off counter receipt with initial weigh-in from customer, and file courier theft ticket."
+    },
+    "rootCause": {
+      "headline": "High-value asset missing from return package (87% mass deficit); potential in-transit theft or mispackaging.",
+      "summary": "Inbound package delivered to return center contained paper material weighing 0.42 kg instead of the 3.24 kg hardware. Root cause remains under investigation between carrier interception and user mispackaging.",
+      "chain": [
+        {
+          "label": "Outbound Benchmark",
+          "text": "Original MacBook shipped at 3.24 kg"
+        },
+        {
+          "label": "Return Inbound",
+          "text": "Conveyor scale recorded 0.42 kg with paper filler"
+        },
+        {
+          "label": "Root Cause",
+          "text": "Hardware missing from parcel; courier investigation initiated"
+        }
+      ],
+      "impact": "$2,899.00 asset loss exposure; requires human loss prevention sign-off."
+    },
+    "resolution": {
+      "actionType": "Hold Refund & Escalate to Asset Protection",
+      "status": "In Human Review",
+      "confidenceScore": 98,
+      "headline": "Refund Paused Pending Asset Protection Verification",
+      "reason": "Severe weight discrepancy requires verified counter receipt and carrier loss investigation.",
+      "customerFacingMessage": "Dear Jordan, your return package was received at our sorting facility; however, our automated intake scale recorded a significant weight discrepancy (package weighed 0.42 kg without the laptop inside). To help us resolve this with our carrier, please provide a clear copy of your carrier drop-off receipt showing the weight recorded at the time of drop-off. We have opened an investigation with the carrier to track the shipment security seal.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Place hold on refund transaction #REF-449102",
+          "status": "Executed"
+        },
+        {
+          "id": "act-2",
+          "title": "Open formal carrier theft claim with UPS Security Operations",
+          "status": "Executed"
+        },
+        {
+          "id": "act-3",
+          "title": "Assign case file to Asset Protection Senior Investigator",
+          "status": "Executed"
+        }
+      ]
+    },
+    "escalation": {
+      "required": true,
+      "reason": "High-value ($2,899.00) return with critical physical mass deficit (-87%) requiring human asset protection determination.",
+      "riskLevel": "Critical",
+      "recommendedAction": "Review carrier initial drop-off scan weight; if drop-off was 0.42kg, initiate customer dispute protocol; if drop-off was 3.24kg, process insurance claim for in-transit theft.",
+      "assignedSpecialist": "Asset Protection Senior Investigator"
+    },
+    "assignedTeam": "Fraud & Asset Protection",
+    "assignedAgent": "Asset Protection Senior Specialist",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1047-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1047 classified under Returns & Asset Verification. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 05:00:00"
+      },
+      {
+        "id": "not-ARG-1047-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Case flagged for human specialist review due to policy threshold. Telemetry evidence assembled for supervisor sign-off.",
+        "timestamp": "2026-09-30 11:10:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Awaiting Specialist Review",
+      "objective": "Investigate customer complaint for order RET-449102 regarding Returns & Asset Verification and determine empirical root cause.",
+      "currentStage": "Stage 09 — Specialist Review",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Final carrier tracking checkpoint digest"
+      ],
+      "nextSuggestedStep": "Review contradiction matrix and approve specialist override or insurance dispute."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Jordan Lee (Standard Tier) verified with 68% reliability score.",
+        "Order reference: RET-449102 associated with disputed value of $2,899.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [
+        "Intake Conveyor Belt Scale Telemetry (Hardware Sensor Record)",
+        "Inbound Unboxing Camera Still (Security Footage)"
+      ],
+      "contradictoryEvidence": [
+        "Critical Contradiction: Customer Claim of MacBook Return vs Physical Weight Telemetry"
+      ],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  },
+  {
+    "id": "ARG-1041",
+    "title": "API Gateway 504 timeout during checkout cart reservation",
+    "customer": {
+      "name": "David Kim",
+      "email": "david.kim@fintech-ops.net",
+      "avatar": "DK",
+      "tier": "Standard Tier",
+      "joinedDate": "Feb 2025",
+      "reliabilityScore": 88,
+      "reliabilityBand": "High Reliability",
+      "totalCases": 3,
+      "resolvedCases": 2,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "During high-traffic flash sale, my checkout timed out with 504 Gateway Error. My account shows reward points debited, but no order receipt was generated.",
+    "category": "Technical & API Lag",
+    "priority": "Medium",
+    "status": "Evidence Required",
+    "createdAt": "2026-09-30 04:30:00",
+    "updatedAt": "2026-09-30 11:50:00",
+    "orderId": "ORD-99124",
+    "amount": "$199.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "billing": {
+        "agentName": "Billing Agent",
+        "version": "v3.4.1",
+        "status": "Completed",
+        "confidenceScore": 96,
+        "task": "Verify rewards points hold and reverse deduction",
+        "summary": "Identified 1,990 loyalty points placed in pending escrow without matching order ID.",
+        "executionTime": "140ms",
+        "metrics": [
+          {
+            "label": "Points Hold",
+            "value": "1,990 Pts"
+          }
+        ],
+        "findings": [
+          "Points held in uncommitted transaction."
+        ]
+      },
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Complaint Ingested",
+        "desc": "Customer reported 504 checkout error",
+        "time": "04:30:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Telemetry Queried",
+        "desc": "Gateway error trace identified in Datadog",
+        "time": "04:31:00",
+        "status": "completed"
+      },
+      {
+        "step": 3,
+        "title": "Awaiting Session Log",
+        "desc": "Extracting customer browser request correlation ID",
+        "time": "Current",
+        "status": "current"
+      }
+    ],
+    "evidence": [],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "System state synchronization discrepancy under active diagnostic evaluation.",
+      "summary": "Investigation coordinator detected latency between transaction capture and downstream event dispatch. Telemetry is being evaluated to isolate root cause.",
+      "chain": [
+        {
+          "label": "Customer Claim",
+          "text": "Dispute filed regarding Technical & API Lag"
+        },
+        {
+          "label": "Telemetry Finding",
+          "text": "Database state holds uncommitted reservation lock"
+        },
+        {
+          "label": "Diagnosis",
+          "text": "Transient event dispatch timeout between distributed workers"
+        }
+      ],
+      "impact": "Order held in staging queue without automated customer update.",
+      "confidenceScore": 92,
+      "requiresHumanReview": false,
+      "supportingFindings": [
+        "OMS database lock verified",
+        "Gateway payment cleared"
+      ],
+      "missingInfo": [
+        "Worker reconnect trace"
+      ]
+    },
+    "resolution": {
+      "actionType": "Autonomous Order Verification & Customer Resync",
+      "status": "Formulated",
+      "confidenceScore": 95,
+      "headline": "Authorize Expedited Resync and Issue Customer Update",
+      "reason": "Zero fraudulent indicators detected. Customer veracity substantiated by historic reliability score.",
+      "customerFacingMessage": "Dear David, thank you for contacting us. ARGUS has audited your case (ARG-1041) across our Billing, Order, and Technical systems. We have verified your records and our operations team has taken immediate corrective action.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Release inventory hold and dispatch priority courier tracking",
+          "status": "Ready"
+        },
+        {
+          "id": "act-2",
+          "title": "Apply courtesy loyalty credit to customer account",
+          "status": "Scheduled"
+        }
+      ],
+      "resolutionNotes": "System approved under automated resolution ceiling policy.",
+      "humanEscalationStatus": "None",
+      "escalationReason": "Standard autonomous processing",
+      "nextAction": "Execute approved resolution"
+    },
+    "escalation": null,
+    "assignedTeam": "Core Platform Engineering",
+    "assignedAgent": "Technical Operations SRE",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1041-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1041 classified under Technical & API Lag. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 04:30:00"
+      },
+      {
+        "id": "not-ARG-1041-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Initial findings assembled. Awaiting final consensus and customer communication sign-off.",
+        "timestamp": "2026-09-30 11:50:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Active Diagnostic DAG",
+      "objective": "Investigate customer complaint for order ORD-99124 regarding Technical & API Lag and determine empirical root cause.",
+      "currentStage": "Stage 05 — Parallel Investigation Active",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Customer photo upload / document verification"
+      ],
+      "nextSuggestedStep": "Synthesize agent findings through coordinator and formulate customer resolution plan."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account David Kim (Standard Tier) verified with 88% reliability score.",
+        "Order reference: ORD-99124 associated with disputed value of $199.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [],
+      "contradictoryEvidence": [],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  },
+  {
+    "id": "ARG-1048",
+    "title": "Account locked out during multi-factor reset on mobile checkout",
+    "customer": {
+      "name": "Sarah Jenkins",
+      "email": "sarah.j@designhub.co",
+      "avatar": "SJ",
+      "tier": "Enterprise Tier",
+      "joinedDate": "Nov 2024",
+      "reliabilityScore": 96,
+      "reliabilityBand": "High Reliability",
+      "totalCases": 6,
+      "resolvedCases": 6,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "Unable to log in after changing phone number. System sent security lock alert.",
+    "category": "Other & Account",
+    "priority": "Low",
+    "status": "Resolved",
+    "createdAt": "2026-09-29 18:20:00",
+    "updatedAt": "2026-09-30 08:10:00",
+    "orderId": "ACC-55201",
+    "amount": "$0.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "completed",
+        "progress": 100,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Identity Verified",
+        "desc": "Out-of-band SMS challenge approved",
+        "time": "18:25:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Account Unlocked",
+        "desc": "Security hold lifted autonomously",
+        "time": "18:26:00",
+        "status": "completed"
+      }
+    ],
+    "evidence": [],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "System state synchronization discrepancy under active diagnostic evaluation.",
+      "summary": "Investigation coordinator detected latency between transaction capture and downstream event dispatch. Telemetry is being evaluated to isolate root cause.",
+      "chain": [
+        {
+          "label": "Customer Claim",
+          "text": "Dispute filed regarding Other & Account"
+        },
+        {
+          "label": "Telemetry Finding",
+          "text": "Database state holds uncommitted reservation lock"
+        },
+        {
+          "label": "Diagnosis",
+          "text": "Transient event dispatch timeout between distributed workers"
+        }
+      ],
+      "impact": "Order held in staging queue without automated customer update.",
+      "confidenceScore": 92,
+      "requiresHumanReview": false,
+      "supportingFindings": [
+        "OMS database lock verified",
+        "Gateway payment cleared"
+      ],
+      "missingInfo": [
+        "Worker reconnect trace"
+      ]
+    },
+    "resolution": {
+      "actionType": "Autonomous Security Unlock",
+      "status": "Executed",
+      "confidenceScore": 99.8,
+      "headline": "Account Access Restored via Verified Out-of-Band Auth",
+      "reason": "Confirmed zero brute-force indicators; authorized phone number updated.",
+      "customerFacingMessage": "Your account access has been safely restored. You may now log in using your updated two-factor credentials.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Lift account lock and refresh session token",
+          "status": "Executed"
+        }
+      ]
+    },
+    "escalation": null,
+    "assignedTeam": "Tier 1 Support & Autonomous Investigation",
+    "assignedAgent": "Investigation Coordinator",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1048-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1048 classified under Other & Account. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-29 18:20:00"
+      },
+      {
+        "id": "not-ARG-1048-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Resolution approved and verified. Automated internal remediation dispatched successfully.",
+        "timestamp": "2026-09-30 08:10:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Resolved & Closed",
+      "objective": "Investigate customer complaint for order ACC-55201 regarding Other & Account and determine empirical root cause.",
+      "currentStage": "Stage 09 — Finalized & Verified",
+      "openQuestions": [],
+      "pendingEvidence": [],
+      "nextSuggestedStep": "Investigation concluded. No further action needed."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Sarah Jenkins (Enterprise Tier) verified with 96% reliability score.",
+        "Order reference: ACC-55201 associated with disputed value of $0.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [],
+      "supportingEvidence": [],
+      "contradictoryEvidence": [],
+      "missingInfo": [],
+      "confidenceStatus": "100% Fully Verified"
+    }
+  },
+  {
+    "id": "ARG-1049",
+    "title": "Warehouse pick queue lock stalled delivery dispatch for 48 hours",
+    "customer": {
+      "name": "Alex Rivera",
+      "email": "a.rivera@logistics-direct.com",
+      "avatar": "AR",
+      "tier": "Commercial Partner",
+      "joinedDate": "Aug 2024",
+      "reliabilityScore": 91,
+      "reliabilityBand": "High Reliability",
+      "totalCases": 4,
+      "resolvedCases": 3,
+      "disputedCases": 0,
+      "isUserSubmitted": false
+    },
+    "complaintText": "Commercial order #ORD-44120 scheduled for priority dispatch on Tuesday has not moved from warehouse status.",
+    "category": "Order & Logistics",
+    "priority": "Medium",
+    "status": "Investigating",
+    "createdAt": "2026-09-30 06:15:00",
+    "updatedAt": "2026-09-30 11:40:00",
+    "orderId": "ORD-44120",
+    "amount": "$520.00",
+    "activeAgents": [
+      {
+        "id": "coordinator",
+        "name": "Coordinator",
+        "status": "investigating",
+        "progress": 85,
+        "role": "Consensus & Root Cause Engine"
+      },
+      {
+        "id": "billing",
+        "name": "Billing Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Ledger & Gateway Audit"
+      },
+      {
+        "id": "order",
+        "name": "Order Agent",
+        "status": "completed",
+        "progress": 100,
+        "role": "Fulfillment & Inventory State"
+      },
+      {
+        "id": "tech",
+        "name": "Technical Agent",
+        "status": "investigating",
+        "progress": 75,
+        "role": "Telemetry & Signal Diagnostics"
+      },
+      {
+        "id": "evidence_verifier",
+        "name": "Evidence Verification",
+        "status": "completed",
+        "progress": 100,
+        "role": "Cryptographic Digest & Hash Audit"
+      }
+    ],
+    "agentsData": {
+      "evidence_verifier": {
+        "agentName": "Evidence Verification Agent",
+        "version": "v2.1.0",
+        "status": "Completed",
+        "confidenceScore": 98.4,
+        "task": "Verify cryptographic SHA-256 digests, payload signatures, and sensor audit trails",
+        "summary": "Cryptographic integrity audit confirmed: zero payload tampering or retroactive modification across ingested telemetry.",
+        "executionTime": "115ms",
+        "metrics": [
+          {
+            "label": "Digest Check",
+            "value": "SHA-256 Validated"
+          },
+          {
+            "label": "Tampering Flags",
+            "value": "Zero Detected"
+          },
+          {
+            "label": "Source Attestation",
+            "value": "Cryptographically Verified"
+          }
+        ],
+        "findings": [
+          "Cryptographic digests validated against upstream gateway signing keys.",
+          "Payload immutable timestamps confirmed authentic.",
+          "Zero unauthorized alteration found across ingested records."
+        ]
+      }
+    },
+    "timeline": [
+      {
+        "step": 1,
+        "title": "Ticket Ingested",
+        "desc": "Dispatched to Warehouse OMS Agent",
+        "time": "06:15:00",
+        "status": "completed"
+      },
+      {
+        "step": 2,
+        "title": "Bin Lock Identified",
+        "desc": "Pallet reservation held on Bay 14-C",
+        "time": "06:20:00",
+        "status": "completed"
+      }
+    ],
+    "evidence": [],
+    "contradiction": null,
+    "rootCause": {
+      "headline": "System state synchronization discrepancy under active diagnostic evaluation.",
+      "summary": "Investigation coordinator detected latency between transaction capture and downstream event dispatch. Telemetry is being evaluated to isolate root cause.",
+      "chain": [
+        {
+          "label": "Customer Claim",
+          "text": "Dispute filed regarding Order & Logistics"
+        },
+        {
+          "label": "Telemetry Finding",
+          "text": "Database state holds uncommitted reservation lock"
+        },
+        {
+          "label": "Diagnosis",
+          "text": "Transient event dispatch timeout between distributed workers"
+        }
+      ],
+      "impact": "Order held in staging queue without automated customer update.",
+      "confidenceScore": 92,
+      "requiresHumanReview": false,
+      "supportingFindings": [
+        "OMS database lock verified",
+        "Gateway payment cleared"
+      ],
+      "missingInfo": [
+        "Worker reconnect trace"
+      ]
+    },
+    "resolution": {
+      "actionType": "Autonomous Order Verification & Customer Resync",
+      "status": "Formulated",
+      "confidenceScore": 95,
+      "headline": "Authorize Expedited Resync and Issue Customer Update",
+      "reason": "Zero fraudulent indicators detected. Customer veracity substantiated by historic reliability score.",
+      "customerFacingMessage": "Dear Alex, thank you for contacting us. ARGUS has audited your case (ARG-1049) across our Billing, Order, and Technical systems. We have verified your records and our operations team has taken immediate corrective action.",
+      "internalActions": [
+        {
+          "id": "act-1",
+          "title": "Release inventory hold and dispatch priority courier tracking",
+          "status": "Ready"
+        },
+        {
+          "id": "act-2",
+          "title": "Apply courtesy loyalty credit to customer account",
+          "status": "Scheduled"
+        }
+      ],
+      "resolutionNotes": "System approved under automated resolution ceiling policy.",
+      "humanEscalationStatus": "None",
+      "escalationReason": "Standard autonomous processing",
+      "nextAction": "Execute approved resolution"
+    },
+    "escalation": null,
+    "assignedTeam": "Logistics & Delivery Operations",
+    "assignedAgent": "Logistics Dispute Lead",
+    "internalNotes": [
+      {
+        "id": "not-ARG-1049-1",
+        "author": "Autonomous Coordinator",
+        "role": "System Agent",
+        "text": "Case ARG-1049 classified under Order & Logistics. Ingested customer statement and mobilized 5 parallel diagnostic agents.",
+        "timestamp": "2026-09-30 06:15:00"
+      },
+      {
+        "id": "not-ARG-1049-2",
+        "author": "Operations Lead",
+        "role": "Support Specialist",
+        "text": "Initial findings assembled. Awaiting final consensus and customer communication sign-off.",
+        "timestamp": "2026-09-30 11:40:00"
+      }
+    ],
+    "investigationOverview": {
+      "status": "Active Diagnostic DAG",
+      "objective": "Investigate customer complaint for order ORD-44120 regarding Order & Logistics and determine empirical root cause.",
+      "currentStage": "Stage 05 — Parallel Investigation Active",
+      "openQuestions": [
+        "Are all third-party carrier and gateway logs reconciled?",
+        "Does customer account qualify for automated goodwill compensation?"
+      ],
+      "pendingEvidence": [
+        "Final carrier tracking checkpoint digest"
+      ],
+      "nextSuggestedStep": "Synthesize agent findings through coordinator and formulate customer resolution plan."
+    },
+    "findings": {
+      "verifiedFacts": [
+        "Customer account Alex Rivera (Commercial Partner) verified with 91% reliability score.",
+        "Order reference: ORD-44120 associated with disputed value of $520.00.",
+        "Payment and OMS database records cross-referenced against edge gateway logs."
+      ],
+      "unverifiedClaims": [
+        "Customer expectation of immediate automated refund or delivery rescheduling."
+      ],
+      "supportingEvidence": [],
+      "contradictoryEvidence": [],
+      "missingInfo": [
+        "Final logistics carrier settlement confirmation"
+      ],
+      "confidenceStatus": "96.4% High System Confidence"
+    }
+  }
+]
