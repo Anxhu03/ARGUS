@@ -88,8 +88,8 @@ def create_app() -> FastAPI:
 
     # 3. Mount Route Modules
     app.include_router(health_router)
-    app.include_router(cases_router)
-    # Alias /api/v1/cases as well for API contract compatibility
+    app.include_router(cases_router, prefix="/api")
+    # Alias /api/v1 as well for API contract compatibility
     app.include_router(cases_router, prefix="/api/v1")
 
     return app

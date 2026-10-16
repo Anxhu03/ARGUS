@@ -80,11 +80,30 @@ export default function CaseDetailView() {
     }
   };
 
-  const handleReRunAgents = () => {
+  const handleReRunAgents = async () => {
+    try {
+      addToast({
+        type: 'info',
+        title: 'Re-running Investigation DAG',
+        message: 'Flushing cache and re-querying Billing, Order, Tech, and Evidence Verification agent endpoints...'
+      });
+      await api.analyzeCase(currentCase.id);
+      triggerRefresh();
+      addToast({
+        type: 'success',
+        title: 'Investigation Re-Synthesized',
+        message: 'All evidence re-verified; contradiction matrix and root cause updated.'
+      });
+    } catch {
+      triggerRefresh();
+    }
+  };
+
+  const handleEvidenceAdded = () => {
     addToast({
-      type: 'info',
-      title: 'Re-running Investigation DAG',
-      message: 'Flushing cache and re-querying Billing, Order, Tech, and Evidence Verification agent endpoints...'
+      type: 'success',
+      title: 'Evidence Ingested & Verified',
+      message: 'New telemetry artifact ingested. Deterministic contradiction checks and root cause re-synthesized.'
     });
     triggerRefresh();
   };
@@ -160,6 +179,7 @@ export default function CaseDetailView() {
           onApproveResolution={handleApproveResolution}
           onEscalateCase={handleEscalateCase}
           onRequestEvidence={handleRequestEvidence}
+          onEvidenceAdded={handleEvidenceAdded}
         />
       )}
 
@@ -168,6 +188,7 @@ export default function CaseDetailView() {
         <EvidenceMatrix
           evidence={currentCase.evidence || []}
           caseId={currentCase.id}
+          onEvidenceAdded={handleEvidenceAdded}
         />
       )}
 

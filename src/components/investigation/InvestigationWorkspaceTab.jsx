@@ -30,7 +30,8 @@ export default function InvestigationWorkspaceTab({
   caseData,
   onApproveResolution,
   onEscalateCase,
-  onRequestEvidence
+  onRequestEvidence,
+  onEvidenceAdded
 }) {
   const [selectedAgentId, setSelectedAgentId] = useState(null);
   const [activeWorkspaceSection, setActiveWorkspaceSection] = useState('all'); // 'all' | 'timeline' | 'agents' | 'evidence' | 'findings' | 'resolution'
@@ -211,7 +212,11 @@ export default function InvestigationWorkspaceTab({
             Section D — Verifiable Cryptographic & Telemetry Evidence
           </h4>
         </div>
-        <EvidenceMatrix evidence={caseData.evidence || []} caseId={caseData.id} />
+        <EvidenceMatrix
+          evidence={caseData.evidence || []}
+          caseId={caseData.id}
+          onEvidenceAdded={onEvidenceAdded}
+        />
       </div>
 
       {/* SECTION E — FINDINGS AND CONTRADICTIONS */}

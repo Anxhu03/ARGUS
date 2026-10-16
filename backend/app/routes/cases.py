@@ -3,11 +3,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from backend.app.config import settings
 from backend.app.models.case import CaseCreate, CaseUpdate
+from backend.app.models.evidence import EvidenceCreate
 from backend.app.repositories.base import CaseRepository
 from backend.app.repositories.sqlite_case_repository import SQLiteCaseRepository
-from backend.app.services.case_service import CaseService, EntityNotFoundError
+from backend.app.services.case_service import (
+    CaseService,
+    DuplicateEvidenceError,
+    EntityNotFoundError,
+)
 
-router = APIRouter(prefix="/api/cases", tags=["Cases"])
+router = APIRouter(prefix="/cases", tags=["Cases & Evidence Intelligence"])
 
 # Dependency Injection for repository and service
 _shared_repo: Optional[CaseRepository] = None
@@ -87,6 +92,155 @@ def update_case(
     """
     try:
         return service.update_case(case_id, update_in)
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ENTITY_NOT_FOUND",
+                "message": str(e),
+                "entity_id": case_id
+            }
+        )
+
+# =========================================================================
+# PHASE 8: Evidence Intelligence & Root-Cause Analysis Endpoints
+# =========================================================================
+
+@router.get("/{case_id}/evidence", response_model=List[Dict[str, Any]])
+def get_case_evidence(
+    case_id: str,
+    verification_status: Optional[str] = Query(None, alias="status", description="Filter by verification status (Verified, Pending, Conflicting, etc.)"),
+    type_: Optional[str] = Query(None, alias="category", description="Filter by evidence type/category"),
+    source_label: Optional[str] = Query(None, alias="sourceLabel", description="Filter by source label (verified, simulated, mock)"),
+    service: CaseService = Depends(get_case_service),
+):
+    """
+    Retrieve all evidence artifacts ingested for an investigation case,
+    including deterministic verification audits and confidence scores.
+    """
+    try:
+        return service.get_case_evidence(
+            case_id=case_id,
+            status=verification_status,
+            type_=type_,
+            source_label=source_label,
+        )
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ENTITY_NOT_FOUND",
+                "message": str(e),
+                "entity_id": case_id
+            }
+        )
+
+@router.post("/{case_id}/evidence", response_model=Dict[str, Any], status_code=status.HTTP_201_CREATED)
+def add_case_evidence(
+    case_id: str,
+    payload: EvidenceCreate,
+    service: CaseService = Depends(get_case_service),
+):
+    """
+    Ingest a new evidence artifact for an investigation case.
+    Performs duplicate detection, runs deterministic verification,
+    and automatically re-evaluates contradictions and root cause.
+    """
+    try:
+        return service.add_case_evidence(case_id, payload)
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ENTITY_NOT_FOUND",
+                "message": str(e),
+                "entity_id": case_id
+            }
+        )
+    except DuplicateEvidenceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "DUPLICATE_EVIDENCE",
+                "message": str(e),
+                "case_id": case_id
+            }
+        )
+
+@router.get("/{case_id}/verification", response_model=Dict[str, Any])
+def get_case_verification(
+    case_id: str,
+    service: CaseService = Depends(get_case_service),
+):
+    """
+    Retrieve comprehensive verification outcomes, cross-source audits,
+    and missing-information checklists for an investigation case.
+    """
+    try:
+        return service.get_case_verification(case_id)
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ENTITY_NOT_FOUND",
+                "message": str(e),
+                "entity_id": case_id
+            }
+        )
+
+@router.get("/{case_id}/contradictions", response_model=Optional[Dict[str, Any]])
+def get_case_contradictions(
+    case_id: str,
+    service: CaseService = Depends(get_case_service),
+):
+    """
+    Retrieve detected empirical contradictions between evidence artifacts,
+    customer statements, and system telemetry for an investigation case.
+    """
+    try:
+        return service.get_case_contradictions(case_id)
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ENTITY_NOT_FOUND",
+                "message": str(e),
+                "entity_id": case_id
+            }
+        )
+
+@router.get("/{case_id}/root-cause", response_model=Dict[str, Any])
+def get_case_root_cause(
+    case_id: str,
+    service: CaseService = Depends(get_case_service),
+):
+    """
+    Retrieve synthesized root-cause diagnosis, deterministic 3-step chain,
+    verified facts, suspected causes, and uncertainty indicators.
+    """
+    try:
+        return service.get_case_root_cause(case_id)
+    except EntityNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "ENTITY_NOT_FOUND",
+                "message": str(e),
+                "entity_id": case_id
+            }
+        )
+
+@router.post("/{case_id}/analyze", response_model=Dict[str, Any])
+def analyze_case(
+    case_id: str,
+    service: CaseService = Depends(get_case_service),
+):
+    """
+    Trigger live re-verification, contradiction detection, and root-cause synthesis,
+    updating the case findings and persisting results in the database.
+    """
+    try:
+        return service.analyze_case(case_id)
     except EntityNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

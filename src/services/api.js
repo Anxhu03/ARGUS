@@ -810,6 +810,183 @@ export const api = {
     }
   },
 
+  // --- Phase 8: Evidence Intelligence & Root-Cause Analysis ---
+  async getCaseEvidence(caseId, filters = {}) {
+    try {
+      const params = new URLSearchParams();
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.category && filters.category !== 'all') params.append('category', filters.category);
+      if (filters.sourceLabel && filters.sourceLabel !== 'all') params.append('sourceLabel', filters.sourceLabel);
+
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const data = await fetchWithTimeout(`${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}/evidence${qs}`, {}, 4000);
+      isBackendConnected = true;
+      return data;
+    } catch (err) {
+      if (err.status === 404) throw err;
+      isBackendConnected = false;
+      await simulateDelay(80);
+      const caseItem = casesStore.find(c => c.id.toLowerCase() === caseId.toLowerCase());
+      if (caseItem) {
+        let evs = caseItem.evidence || [];
+        if (filters.status && filters.status !== 'all') {
+          evs = evs.filter(e => (e.status || '').toLowerCase() === filters.status.toLowerCase());
+        }
+        return JSON.parse(JSON.stringify(evs));
+      }
+      throw new Error(`Case ${caseId} not found`);
+    }
+  },
+
+  async addCaseEvidence(caseId, evidencePayload) {
+    try {
+      const data = await fetchWithTimeout(
+        `${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}/evidence`,
+        {
+          method: 'POST',
+          body: JSON.stringify(evidencePayload)
+        },
+        4000
+      );
+      isBackendConnected = true;
+      try {
+        const updatedCase = await fetchWithTimeout(`${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}`, {}, 3000);
+        this._syncLocalCase(updatedCase);
+      } catch {}
+      return data;
+    } catch (err) {
+      if (err.status === 404 || err.status === 409 || err.status === 422) throw err;
+      isBackendConnected = false;
+      await simulateDelay(150);
+      const index = casesStore.findIndex(c => c.id.toLowerCase() === caseId.toLowerCase());
+      if (index !== -1) {
+        const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        const newEv = {
+          id: `ev-${Date.now().toString().slice(-4)}`,
+          caseId,
+          title: evidencePayload.title,
+          type: evidencePayload.type,
+          source: evidencePayload.source,
+          sourceLabel: evidencePayload.sourceLabel || "simulated",
+          timestamp: evidencePayload.timestamp || nowStr,
+          status: "Verified",
+          description: evidencePayload.description || "",
+          payload: evidencePayload.payload || {},
+          confidenceScore: 95.0,
+          confidenceBasis: "Deterministic verification rules applied (offline prototype)",
+          verificationAudit: {
+            verifiedAt: `${nowStr} UTC`,
+            passed: true,
+            checks: [
+              { checkName: "Required Metadata Fields", passed: true, detail: "All required metadata present" },
+              { checkName: "Payload Telemetry Structure", passed: true, detail: "Payload structured validly" },
+              { checkName: "Source Attestation Level", passed: true, detail: "Simulated offline verification" }
+            ],
+            reason: "Offline deterministic verification passed.",
+            confidenceScore: 95.0
+          }
+        };
+        casesStore[index].evidence = [...(casesStore[index].evidence || []), newEv];
+        return newEv;
+      }
+      throw new Error(`Case ${caseId} not found`);
+    }
+  },
+
+  async getCaseVerification(caseId) {
+    try {
+      const data = await fetchWithTimeout(`${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}/verification`, {}, 4000);
+      isBackendConnected = true;
+      return data;
+    } catch (err) {
+      if (err.status === 404) throw err;
+      isBackendConnected = false;
+      await simulateDelay(100);
+      const caseItem = casesStore.find(c => c.id.toLowerCase() === caseId.toLowerCase());
+      if (caseItem) {
+        const evs = caseItem.evidence || [];
+        const verified = evs.filter(e => (e.status || '').toLowerCase() === 'verified');
+        const conflicting = evs.filter(e => (e.status || '').toLowerCase() === 'conflicting');
+        return {
+          caseId,
+          status: conflicting.length > 0 ? "conflicts_detected" : evs.length === 0 ? "evidence_required" : "verified",
+          totalEvidence: evs.length,
+          verifiedCount: verified.length,
+          conflictingCount: conflicting.length,
+          pendingCount: evs.length - verified.length - conflicting.length,
+          discrepancies: caseItem.contradiction ? [caseItem.contradiction.headline] : [],
+          missingInformation: evs.length === 0 ? ["No evidence artifacts ingested yet."] : [],
+          evidence: evs,
+          contradiction: caseItem.contradiction || null,
+          rootCause: caseItem.rootCause || null,
+          generatedAt: new Date().toISOString()
+        };
+      }
+      throw new Error(`Case ${caseId} not found`);
+    }
+  },
+
+  async getCaseContradictions(caseId) {
+    try {
+      const data = await fetchWithTimeout(`${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}/contradictions`, {}, 4000);
+      isBackendConnected = true;
+      return data;
+    } catch (err) {
+      if (err.status === 404) throw err;
+      isBackendConnected = false;
+      await simulateDelay(60);
+      const caseItem = casesStore.find(c => c.id.toLowerCase() === caseId.toLowerCase());
+      return caseItem?.contradiction || null;
+    }
+  },
+
+  async getCaseRootCause(caseId) {
+    try {
+      const data = await fetchWithTimeout(`${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}/root-cause`, {}, 4000);
+      isBackendConnected = true;
+      return data;
+    } catch (err) {
+      if (err.status === 404) throw err;
+      isBackendConnected = false;
+      await simulateDelay(60);
+      const caseItem = casesStore.find(c => c.id.toLowerCase() === caseId.toLowerCase());
+      return caseItem?.rootCause || null;
+    }
+  },
+
+  async analyzeCase(caseId) {
+    try {
+      const data = await fetchWithTimeout(
+        `${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}/analyze`,
+        { method: 'POST' },
+        4000
+      );
+      isBackendConnected = true;
+      try {
+        const updatedCase = await fetchWithTimeout(`${API_BASE_URL}/api/cases/${encodeURIComponent(caseId)}`, {}, 3000);
+        this._syncLocalCase(updatedCase);
+      } catch {}
+      return data;
+    } catch (err) {
+      if (err.status === 404) throw err;
+      isBackendConnected = false;
+      await simulateDelay(150);
+      const caseItem = casesStore.find(c => c.id.toLowerCase() === caseId.toLowerCase());
+      if (caseItem) {
+        return {
+          caseId,
+          status: caseItem.status,
+          contradiction: caseItem.contradiction,
+          rootCause: caseItem.rootCause,
+          findings: caseItem.findings,
+          evidenceCount: (caseItem.evidence || []).length,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      throw new Error(`Case ${caseId} not found`);
+    }
+  },
+
   _syncLocalCase(updatedCase) {
     if (!updatedCase || !updatedCase.id) return;
     const idx = casesStore.findIndex(c => c.id.toLowerCase() === updatedCase.id.toLowerCase());

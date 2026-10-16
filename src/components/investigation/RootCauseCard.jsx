@@ -9,11 +9,20 @@ import {
   Sparkles,
   ShieldCheck,
   UserCheck,
-  Info
+  Info,
+  HelpCircle,
+  FileQuestion,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function RootCauseCard({ rootCause }) {
   if (!rootCause) return null;
+
+  const uncertainty = rootCause.uncertaintyLevel || 'Low';
+  const isSufficient = rootCause.isSufficient !== false;
+  const verifiedFacts = rootCause.verifiedFacts || [];
+  const suspectedCauses = rootCause.suspectedCauses || [];
+  const unresolvedQuestions = rootCause.unresolvedQuestions || [];
 
   return (
     <div
@@ -45,16 +54,48 @@ export default function RootCauseCard({ rootCause }) {
             <GitCommit size={22} />
           </div>
           <div>
-            <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-purple)', letterSpacing: '0.06em' }}>
-              Root Cause Diagnosis
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-purple)', letterSpacing: '0.06em' }}>
+                Deterministic Root Cause Diagnosis
+              </span>
+              {/* Uncertainty Indicator */}
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: 'var(--radius-full)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  background: uncertainty === 'Low'
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : uncertainty === 'Moderate'
+                      ? 'rgba(245, 158, 11, 0.15)'
+                      : 'rgba(244, 63, 94, 0.15)',
+                  color: uncertainty === 'Low'
+                    ? 'var(--status-emerald)'
+                    : uncertainty === 'Moderate'
+                      ? 'var(--status-amber)'
+                      : 'var(--status-rose)',
+                  border: `1px solid ${
+                    uncertainty === 'Low'
+                      ? 'rgba(16, 185, 129, 0.3)'
+                      : uncertainty === 'Moderate'
+                        ? 'rgba(245, 158, 11, 0.3)'
+                        : 'rgba(244, 63, 94, 0.3)'
+                  }`
+                }}
+              >
+                {uncertainty} Uncertainty {isSufficient ? '(Telemetry Verified)' : '(Evidence Incomplete)'}
+              </span>
+            </div>
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
               {rootCause.headline}
             </h3>
           </div>
         </div>
 
-        {/* Prototype sample notice */}
+        {/* Prototype notice */}
         <div
           style={{
             padding: '4px 10px',
@@ -69,7 +110,7 @@ export default function RootCauseCard({ rootCause }) {
           }}
         >
           <Info size={12} className="text-cyan" />
-          <span>Illustrative Hypothesis (Prototype)</span>
+          <span>Deterministic Synthesis Engine (Simulated Telemetry)</span>
         </div>
       </div>
 
@@ -104,16 +145,18 @@ export default function RootCauseCard({ rootCause }) {
                 gap: '4px',
                 position: 'relative',
                 boxShadow: 'var(--glass-shadow)',
-                borderLeft: `3px solid ${idx === 2 ? 'var(--status-purple)' : 'var(--accent-cyan)'}`
+                borderLeft: `3px solid ${idx === rootCause.chain.length - 1 ? 'var(--status-purple)' : 'var(--accent-cyan)'}`
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: idx === 2 ? 'var(--status-purple)' : 'var(--accent-cyan)', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: idx === rootCause.chain.length - 1 ? 'var(--status-purple)' : 'var(--accent-cyan)', textTransform: 'uppercase' }}>
                   {link.label}
                 </span>
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--text-faint)' }}>
-                  Step 0{idx + 1}
-                </span>
+                {link.evidenceId && (
+                  <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)', background: 'rgba(6, 182, 212, 0.1)', padding: '1px 5px', borderRadius: '3px' }}>
+                    {link.evidenceId}
+                  </span>
+                )}
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.45 }}>
                 {link.text}
@@ -123,42 +166,125 @@ export default function RootCauseCard({ rootCause }) {
         </div>
       </div>
 
-      {/* Supporting Findings & Missing Info Grid */}
+      {/* Confirmed Facts vs Suspected Causes vs Unresolved Questions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
-        {/* Supporting Findings */}
+        {/* Confirmed Facts */}
         <div
           style={{
             padding: '12px 14px',
             borderRadius: 'var(--radius-sm)',
             background: 'var(--bg-tertiary)',
-            border: '1px solid var(--glass-border)'
+            border: '1px solid var(--glass-border)',
+            borderTop: '3px solid var(--status-emerald)'
           }}
         >
-          <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-emerald)', marginBottom: '6px' }}>
-            Supporting Findings
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            <CheckCircle2 size={13} color="var(--status-emerald)" />
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-emerald)' }}>
+              Confirmed Facts ({verifiedFacts.length})
+            </span>
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-            {rootCause.supportingFindings || 'Consistent with gateway ledger idempotency keys and upstream proxy timeout traces.'}
-          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {verifiedFacts.length === 0 ? (
+              <li style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Awaiting telemetry fact extraction.</li>
+            ) : (
+              verifiedFacts.map((fact, idx) => (
+                <li key={idx} style={{ fontSize: '11px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                  • {fact}
+                </li>
+              ))
+            )}
+          </ul>
         </div>
 
-        {/* Missing Information */}
+        {/* Suspected Causes */}
         <div
           style={{
             padding: '12px 14px',
             borderRadius: 'var(--radius-sm)',
             background: 'var(--bg-tertiary)',
-            border: '1px solid var(--glass-border)'
+            border: '1px solid var(--glass-border)',
+            borderTop: '3px solid var(--status-purple)'
           }}
         >
-          <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-amber)', marginBottom: '6px' }}>
-            Missing Information
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            <HelpCircle size={13} color="var(--status-purple)" />
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-purple)' }}>
+              Suspected Causes ({suspectedCauses.length})
+            </span>
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-            {rootCause.missingInfo || 'Upstream payment processor internal transaction log export not yet fully reconciled.'}
-          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {suspectedCauses.length === 0 ? (
+              <li style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Single definitive cause isolated.</li>
+            ) : (
+              suspectedCauses.map((cause, idx) => (
+                <li key={idx} style={{ fontSize: '11px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                  • {cause}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+
+        {/* Unresolved Questions */}
+        <div
+          style={{
+            padding: '12px 14px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--glass-border)',
+            borderTop: '3px solid var(--status-amber)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            <FileQuestion size={13} color="var(--status-amber)" />
+            <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--status-amber)' }}>
+              Unresolved Questions ({unresolvedQuestions.length})
+            </span>
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {unresolvedQuestions.length === 0 ? (
+              <li style={{ fontSize: '11px', color: 'var(--text-faint)' }}>Zero unresolved questions.</li>
+            ) : (
+              unresolvedQuestions.map((q, idx) => (
+                <li key={idx} style={{ fontSize: '11px', color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                  • {q}
+                </li>
+              ))
+            )}
+          </ul>
         </div>
       </div>
+
+      {/* Next Recommended Investigative Action Callout */}
+      {rootCause.nextAction && (
+        <div
+          style={{
+            padding: '12px 16px',
+            borderRadius: 'var(--radius-sm)',
+            background: 'rgba(6, 182, 212, 0.08)',
+            border: '1px solid var(--glass-border-cyan)',
+            borderLeft: '4px solid var(--accent-cyan)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ArrowRight size={16} className="text-cyan" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent-cyan)' }}>
+                Recommended Investigative Action
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-primary)', marginTop: '2px', fontWeight: 500 }}>
+                {rootCause.nextAction}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Impact & Review Policy Bar */}
       <div
@@ -185,7 +311,7 @@ export default function RootCauseCard({ rootCause }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--status-purple)', fontWeight: 600 }}>
           <UserCheck size={14} />
-          <span>{rootCause.humanReviewRequired ? 'Human Review Sign-Off Required' : 'Eligible for Auto-Execution'}</span>
+          <span>{rootCause.isSufficient ? 'Eligible for Auto-Execution' : 'Human Review Required'}</span>
         </div>
       </div>
     </div>

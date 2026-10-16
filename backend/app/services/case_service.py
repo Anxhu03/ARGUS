@@ -3,12 +3,32 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from backend.app.models.case import CaseCreate, CaseUpdate
+from backend.app.models.evidence import (
+    ContradictionModel,
+    EvidenceCreate,
+    EvidenceItem,
+    EvidenceSourceLabel,
+    EvidenceStatus,
+    RootCauseModel,
+    VerificationReportModel,
+)
 from backend.app.repositories.base import CaseRepository
+from backend.app.services.evidence_engine import (
+    ContradictionDetector,
+    EvidenceVerificationEngine,
+    RootCauseSynthesizer,
+    generate_payload_sha256,
+)
 
 class EntityNotFoundError(Exception):
     def __init__(self, message: str, entity_id: str):
         super().__init__(message)
         self.entity_id = entity_id
+
+class DuplicateEvidenceError(Exception):
+    def __init__(self, message: str, case_id: str):
+        super().__init__(message)
+        self.case_id = case_id
 
 class CaseService:
     def __init__(self, repository: CaseRepository):
@@ -376,3 +396,223 @@ class CaseService:
         if not updated:
             raise EntityNotFoundError(f"Case with ID {case_id} not found.", entity_id=case_id)
         return updated
+
+    def get_case_evidence(
+        self,
+        case_id: str,
+        status: Optional[str] = None,
+        type_: Optional[str] = None,
+        source_label: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        case = self.get_case(case_id)
+        evidence_list = case.get("evidence", [])
+
+        # Ensure all existing records have sourceLabel and verificationAudit
+        needs_update = False
+        for ev in evidence_list:
+            if "sourceLabel" not in ev:
+                ev["sourceLabel"] = "verified" if "api" in (ev.get("source") or "").lower() else "simulated"
+                needs_update = True
+            if "verificationAudit" not in ev:
+                EvidenceVerificationEngine.verify_evidence(ev, case)
+                needs_update = True
+
+        if needs_update:
+            self.repository.update(case_id, case)
+
+        result = evidence_list
+        if status and status.lower() != "all":
+            result = [e for e in result if (e.get("status") or "").lower() == status.lower()]
+        if type_ and type_.lower() != "all":
+            result = [e for e in result if (e.get("type") or "").lower() == type_.lower()]
+        if source_label and source_label.lower() != "all":
+            result = [e for e in result if (e.get("sourceLabel") or "").lower() == source_label.lower()]
+
+        return result
+
+    def add_case_evidence(
+        self,
+        case_id: str,
+        evidence_in: EvidenceCreate,
+    ) -> Dict[str, Any]:
+        case = self.get_case(case_id)
+        evidence_list = case.get("evidence", [])
+        now_dt = datetime.now(timezone.utc)
+        now_str = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        raw_dict = evidence_in.model_dump()
+
+        # 1. Duplicate detection
+        is_dup, dup_reason = EvidenceVerificationEngine.detect_duplicate(evidence_list, raw_dict)
+        if is_dup:
+            raise DuplicateEvidenceError(dup_reason, case_id=case_id)
+
+        # 2. Identifier generation
+        existing_ev_ids = {e.get("id") for e in evidence_list}
+        while True:
+            new_ev_id = f"ev-{random.randint(700, 999)}"
+            if new_ev_id not in existing_ev_ids:
+                break
+
+        # 3. Assemble new evidence artifact
+        payload = raw_dict.get("payload") or {}
+        sha256 = raw_dict.get("sha256") or (generate_payload_sha256(payload) if payload else None)
+
+        new_item = {
+            "id": new_ev_id,
+            "caseId": case_id,
+            "title": raw_dict["title"],
+            "type": raw_dict["type"],
+            "source": raw_dict["source"],
+            "sourceLabel": (raw_dict.get("sourceLabel") or "simulated"),
+            "timestamp": raw_dict.get("timestamp") or now_str,
+            "status": "Pending",
+            "description": raw_dict.get("description", ""),
+            "payload": payload,
+            "sha256": sha256,
+            "filePreviewUrl": raw_dict.get("filePreviewUrl"),
+            "confidenceScore": 95.0,
+            "findings": [],
+            "relatedEvidenceIds": raw_dict.get("relatedEvidenceIds") or [],
+        }
+
+        # 4. Perform deterministic verification
+        EvidenceVerificationEngine.verify_evidence(new_item, case)
+
+        # 5. Append evidence and audit note
+        evidence_list.append(new_item)
+        case["evidence"] = evidence_list
+
+        notes = case.get("internalNotes") or []
+        notes.append({
+            "id": f"note-{int(now_dt.timestamp() * 1000)}",
+            "author": "Autonomous Coordinator",
+            "role": "System Agent",
+            "text": f"Ingested evidence artifact '{new_item['title']}' ({new_ev_id}) via {new_item['source']}. Verification Status: {new_item['status']}.",
+            "timestamp": now_str,
+        })
+        case["internalNotes"] = notes
+
+        # 6. Re-evaluate Contradictions & Root Cause
+        contradiction = ContradictionDetector.detect_contradictions(case, evidence_list)
+        if contradiction:
+            case["contradiction"] = contradiction.model_dump()
+            case["status"] = "Contradiction Detected"
+        else:
+            case["contradiction"] = None
+
+        root_cause = RootCauseSynthesizer.synthesize(case, evidence_list, contradiction)
+        case["rootCause"] = root_cause.model_dump()
+        case["updatedAt"] = now_str
+
+        self.repository.update(case_id, case)
+        return new_item
+
+    def get_case_verification(self, case_id: str) -> Dict[str, Any]:
+        case = self.get_case(case_id)
+        evidence_list = case.get("evidence", [])
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+        # Run verification check on all items
+        for ev in evidence_list:
+            if "verificationAudit" not in ev:
+                EvidenceVerificationEngine.verify_evidence(ev, case)
+
+        verified = [e for e in evidence_list if e.get("status") in ("Verified", "Evidence Reviewed")]
+        conflicting = [e for e in evidence_list if e.get("status") == "Conflicting"]
+        pending = [e for e in evidence_list if e.get("status") in ("Pending", "Requires Clarification")]
+
+        contradiction = ContradictionDetector.detect_contradictions(case, evidence_list)
+        root_cause = RootCauseSynthesizer.synthesize(case, evidence_list, contradiction)
+
+        discrepancies = []
+        if contradiction:
+            discrepancies.append(contradiction.headline)
+        for conf in conflicting:
+            discrepancies.append(f"{conf.get('id')}: {conf.get('title')} flagged conflicting during verification.")
+
+        missing_info = []
+        if len(evidence_list) == 0:
+            missing_info.append("Zero evidence artifacts ingested. Need gateway charge, OMS state, and carrier logs.")
+        elif not any("financial" in e.get("type", "").lower() or "stripe" in e.get("source", "").lower() for e in evidence_list):
+            missing_info.append("Missing financial transaction confirmation from payment gateway.")
+        elif not any("carrier" in e.get("type", "").lower() or "gis" in e.get("type", "").lower() for e in evidence_list):
+            if "deliver" in (case.get("category", "") + case.get("complaintText", "")).lower():
+                missing_info.append("Missing carrier electronic proof of delivery or driver GPS telemetry.")
+
+        if conflicting:
+            case_status = "conflicts_detected"
+        elif missing_info:
+            case_status = "evidence_required"
+        elif len(verified) > 0 and len(pending) == 0:
+            case_status = "verified"
+        else:
+            case_status = "pending"
+
+        return {
+            "caseId": case_id,
+            "status": case_status,
+            "totalEvidence": len(evidence_list),
+            "verifiedCount": len(verified),
+            "conflictingCount": len(conflicting),
+            "pendingCount": len(pending),
+            "discrepancies": discrepancies,
+            "missingInformation": missing_info,
+            "evidence": evidence_list,
+            "contradiction": contradiction.model_dump() if contradiction else None,
+            "rootCause": root_cause.model_dump(),
+            "generatedAt": now_str,
+        }
+
+    def get_case_contradictions(self, case_id: str) -> Optional[Dict[str, Any]]:
+        case = self.get_case(case_id)
+        evidence_list = case.get("evidence", [])
+        contradiction = ContradictionDetector.detect_contradictions(case, evidence_list)
+        return contradiction.model_dump() if contradiction else None
+
+    def get_case_root_cause(self, case_id: str) -> Dict[str, Any]:
+        case = self.get_case(case_id)
+        evidence_list = case.get("evidence", [])
+        contradiction = ContradictionDetector.detect_contradictions(case, evidence_list)
+        root_cause = RootCauseSynthesizer.synthesize(case, evidence_list, contradiction)
+        return root_cause.model_dump()
+
+    def analyze_case(self, case_id: str) -> Dict[str, Any]:
+        case = self.get_case(case_id)
+        evidence_list = case.get("evidence", [])
+        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
+        # 1. Verify all evidence
+        for ev in evidence_list:
+            EvidenceVerificationEngine.verify_evidence(ev, case)
+
+        # 2. Detect contradictions
+        contradiction = ContradictionDetector.detect_contradictions(case, evidence_list)
+        case["contradiction"] = contradiction.model_dump() if contradiction else None
+
+        # 3. Synthesize root cause
+        root_cause = RootCauseSynthesizer.synthesize(case, evidence_list, contradiction)
+        case["rootCause"] = root_cause.model_dump()
+
+        # 4. Synchronize findings
+        case["findings"] = {
+            "verifiedFacts": root_cause.verifiedFacts,
+            "unverifiedClaims": [case.get("complaintText", "")[:120]],
+            "supportingEvidence": [f"[{e.get('id')}] {e.get('title')}" for e in evidence_list if e.get("status") in ("Verified", "Evidence Reviewed")],
+            "missingInfo": root_cause.unresolvedQuestions,
+            "confidenceStatus": "High Confidence (Telemetry Corroborated)" if root_cause.isSufficient else "Moderate / Low Confidence (Awaiting Telemetry)",
+        }
+
+        case["updatedAt"] = now_str
+        self.repository.update(case_id, case)
+
+        return {
+            "caseId": case_id,
+            "status": case.get("status"),
+            "contradiction": case["contradiction"],
+            "rootCause": case["rootCause"],
+            "findings": case["findings"],
+            "evidenceCount": len(evidence_list),
+            "updatedAt": now_str,
+        }
+
