@@ -36,14 +36,14 @@ import {
 } from 'lucide-react';
 
 export default function CasesListView() {
-  const { navigateToCase, navigateToSupport, addToast } = useApp();
+  const { navigateToCase, navigateToSupport, addToast, caseSearchQuery, setCaseSearchQuery } = useApp();
 
   const [cases, setCases] = useState([]);
   const [allCasesCount, setAllCasesCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Filters state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(caseSearchQuery || '');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -52,10 +52,11 @@ export default function CasesListView() {
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
 
   // Fetch cases from API with current filter set
-  const fetchCases = () => {
+  const fetchCases = (queryOverride) => {
     setLoading(true);
+    const activeQuery = queryOverride !== undefined ? queryOverride : searchQuery;
     api.getCases({
-      query: searchQuery,
+      query: activeQuery,
       status: statusFilter,
       category: categoryFilter,
       priority: priorityFilter,
@@ -71,6 +72,14 @@ export default function CasesListView() {
         setLoading(false);
       });
   };
+
+  // Sync with global search query from TopBar if set
+  useEffect(() => {
+    if (caseSearchQuery !== undefined && caseSearchQuery !== searchQuery) {
+      setSearchQuery(caseSearchQuery);
+      fetchCases(caseSearchQuery);
+    }
+  }, [caseSearchQuery]);
 
   // Initial load & overall count
   useEffect(() => {
@@ -102,6 +111,7 @@ export default function CasesListView() {
 
   const resetFilters = () => {
     setSearchQuery('');
+    if (setCaseSearchQuery) setCaseSearchQuery('');
     setStatusFilter('all');
     setCategoryFilter('all');
     setDateFilter('all');
@@ -235,14 +245,8 @@ export default function CasesListView() {
       />
 
       {/* 2. KPI Summary Metric Cards Row */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '14px'
-        }}
-      >
-        <div onClick={() => setStatusFilter('all')} style={{ cursor: 'pointer' }} title="Show all cases">
+      <div className="cases-kpi-grid">
+        <div className="cases-kpi-card-wrapper" onClick={() => setStatusFilter('all')} title="Show all cases">
           <MetricCard
             title="Total Cases"
             value={metrics.total}
@@ -252,7 +256,7 @@ export default function CasesListView() {
           />
         </div>
 
-        <div onClick={() => setStatusFilter('investigating')} style={{ cursor: 'pointer' }} title="Filter by investigating">
+        <div className="cases-kpi-card-wrapper" onClick={() => setStatusFilter('investigating')} title="Filter by investigating">
           <MetricCard
             title="Open / Active"
             value={metrics.open}
@@ -264,7 +268,7 @@ export default function CasesListView() {
           />
         </div>
 
-        <div onClick={() => setStatusFilter('investigating')} style={{ cursor: 'pointer' }} title="Filter by in-progress">
+        <div className="cases-kpi-card-wrapper" onClick={() => setStatusFilter('investigating')} title="Filter by in-progress">
           <MetricCard
             title="In-Progress"
             value={metrics.inProgress}
@@ -274,7 +278,7 @@ export default function CasesListView() {
           />
         </div>
 
-        <div onClick={() => setStatusFilter('resolved')} style={{ cursor: 'pointer' }} title="Filter by resolved">
+        <div className="cases-kpi-card-wrapper" onClick={() => setStatusFilter('resolved')} title="Filter by resolved">
           <MetricCard
             title="Resolved Cases"
             value={metrics.resolved}
@@ -286,7 +290,7 @@ export default function CasesListView() {
           />
         </div>
 
-        <div onClick={() => setStatusFilter('human')} style={{ cursor: 'pointer' }} title="Filter by human review">
+        <div className="cases-kpi-card-wrapper" onClick={() => setStatusFilter('human')} title="Filter by human review">
           <MetricCard
             title="Escalated / Review"
             value={metrics.escalated}
@@ -396,134 +400,74 @@ export default function CasesListView() {
             }}
           >
             {/* Status Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="input-field"
-                style={{
-                  height: '34px',
-                  fontSize: '12px',
-                  padding: '0 26px 0 10px',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center'
-                }}
-                aria-label="Filter by Status"
-              >
-                {statusOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="cases-filter-select"
+              aria-label="Filter by Status"
+            >
+              {statusOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
             {/* Category Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="input-field"
-                style={{
-                  height: '34px',
-                  fontSize: '12px',
-                  padding: '0 26px 0 10px',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center'
-                }}
-                aria-label="Filter by Category"
-              >
-                {categoryOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="cases-filter-select"
+              aria-label="Filter by Category"
+            >
+              {categoryOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
             {/* Priority Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="input-field"
-                style={{
-                  height: '34px',
-                  fontSize: '12px',
-                  padding: '0 26px 0 10px',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center'
-                }}
-                aria-label="Filter by Priority"
-              >
-                {priorityOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="cases-filter-select"
+              aria-label="Filter by Priority"
+            >
+              {priorityOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
             {/* Date Range Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="input-field"
-                style={{
-                  height: '34px',
-                  fontSize: '12px',
-                  padding: '0 26px 0 10px',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center'
-                }}
-                aria-label="Filter by Date Range"
-              >
-                {dateOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="cases-filter-select"
+              aria-label="Filter by Date Range"
+            >
+              {dateOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
             {/* Sort Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="input-field"
-                style={{
-                  height: '34px',
-                  fontSize: '12px',
-                  padding: '0 26px 0 10px',
-                  cursor: 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 8px center'
-                }}
-                aria-label="Sort Cases"
-              >
-                {sortOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="cases-filter-select"
+              aria-label="Sort Cases"
+            >
+              {sortOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
 
             {/* Reset Filters Action */}
             {hasActiveFilters && (
@@ -532,10 +476,11 @@ export default function CasesListView() {
                 onClick={resetFilters}
                 className="btn btn-secondary btn-sm"
                 style={{
-                  height: '34px',
+                  height: '36px',
                   fontSize: '12px',
                   color: 'var(--accent-cyan)',
-                  borderColor: 'var(--accent-cyan)'
+                  borderColor: 'var(--accent-cyan)',
+                  padding: '0 12px'
                 }}
                 title="Reset all search queries and filters"
               >
@@ -544,7 +489,7 @@ export default function CasesListView() {
               </button>
             )}
 
-            <div style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-muted)' }}>
+            <div style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
               Showing <strong style={{ color: 'var(--text-primary)' }}>{cases.length}</strong> matching cases
             </div>
           </div>
@@ -568,6 +513,7 @@ export default function CasesListView() {
             <table
               style={{
                 width: '100%',
+                minWidth: '980px',
                 borderCollapse: 'collapse',
                 textAlign: 'left',
                 fontSize: '13px'
@@ -584,15 +530,15 @@ export default function CasesListView() {
                     letterSpacing: '0.04em'
                   }}
                 >
-                  <th style={{ padding: '14px 16px', fontWeight: 600 }}>Case ID</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '110px' }}>Case ID</th>
                   <th style={{ padding: '14px 16px', fontWeight: 600, minWidth: '260px' }}>Issue & Context</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600 }}>Customer</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600 }}>Category</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600 }}>Priority</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600 }}>Status</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600 }}>Assigned Team / Agent</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600, whiteSpace: 'nowrap' }}>Dates</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 600, textAlign: 'right' }}>Action</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '150px' }}>Customer</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '140px' }}>Category</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '100px' }}>Priority</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '130px' }}>Status</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '160px' }}>Assigned Team / Agent</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '110px', whiteSpace: 'nowrap' }}>Dates</th>
+                  <th style={{ padding: '14px 16px', fontWeight: 600, width: '90px', textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
               <tbody>

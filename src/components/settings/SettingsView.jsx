@@ -116,7 +116,7 @@ export default function SettingsView() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
           <button className="btn btn-primary" onClick={handleSave}>
             <Save size={15} />
             <span>Save Threshold Configuration</span>
@@ -127,8 +127,8 @@ export default function SettingsView() {
       {/* Connected Services & Mock Integrations */}
       <GlassCard style={{ padding: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Radio size={18} color="#16a34a" />
-          <h3 style={{ fontSize: '16px', fontWeight: 600 }}>Active Integrations & Mock Service Gateways</h3>
+          <Radio size={18} color="var(--status-emerald)" />
+          <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>Active Integrations & Mock Service Gateways</h3>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -147,17 +147,17 @@ export default function SettingsView() {
                 justifyContent: 'space-between',
                 padding: '12px 16px',
                 borderRadius: 'var(--radius-sm)',
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--glass-border)',
                 fontSize: '13px'
               }}
             >
               <div>
-                <div style={{ fontWeight: 600, color: '#0f172a' }}>{svc.name}</div>
-                <div style={{ fontSize: '11px', color: '#64748b' }}>{svc.type}</div>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{svc.name}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{svc.type}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#16a34a', fontSize: '12px', fontWeight: 500 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--status-emerald)', fontSize: '12px', fontWeight: 500 }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--status-emerald)' }} />
                 <span>{svc.status}</span>
               </div>
             </div>
@@ -170,26 +170,26 @@ export default function SettingsView() {
         className="glass-panel"
         style={{
           padding: '20px',
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--glass-border)',
           borderRadius: 'var(--radius-lg)'
         }}
       >
-        <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+        <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
           Workspace Identity & Git Branch
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '12px' }}>
           <div>
-            <span style={{ color: '#64748b' }}>Frontend Owner:</span>
-            <div style={{ fontWeight: 600, color: '#0f172a', marginTop: '2px' }}>Anxhu — Frontend 1</div>
+            <span style={{ color: 'var(--text-muted)' }}>Frontend Owner:</span>
+            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>Anxhu — Frontend 1</div>
           </div>
           <div>
-            <span style={{ color: '#64748b' }}>Active Branch:</span>
-            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#0284c7', marginTop: '2px' }}>anxhu/frontend-1</div>
+            <span style={{ color: 'var(--text-muted)' }}>Active Branch:</span>
+            <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--accent-cyan)', marginTop: '2px' }}>anxhu/argus-phase-5</div>
           </div>
           <div>
-            <span style={{ color: '#64748b' }}>Platform Engine:</span>
-            <div style={{ fontWeight: 600, color: '#0f172a', marginTop: '2px' }}>ARGUS Core v4.2 Production</div>
+            <span style={{ color: 'var(--text-muted)' }}>Platform Engine:</span>
+            <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: '2px' }}>ARGUS Core v4.2 Production</div>
           </div>
         </div>
       </div>

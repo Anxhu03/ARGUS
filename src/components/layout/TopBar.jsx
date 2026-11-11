@@ -28,7 +28,8 @@ export default function TopBar({ onToggleMobile }) {
     addToast,
     backendStatus,
     apiBaseUrl,
-    checkBackendHealth
+    checkBackendHealth,
+    setCaseSearchQuery
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,23 +83,51 @@ export default function TopBar({ onToggleMobile }) {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
-    const q = searchQuery.trim().toUpperCase();
+    const query = searchQuery.trim();
+    const q = query.toUpperCase();
+
+    // 1. Direct Case / Order ID lookup
     if (q.startsWith('ARG-') || q.startsWith('ORD-') || q === '1042' || q === '1043') {
       const targetId = q.includes('1043') ? 'ARG-1043' : 'ARG-1042';
       navigateToCase(targetId);
       addToast({
         type: 'info',
         title: 'Case Loaded',
-        message: `Navigated directly to investigation file ${targetId}.`
+        message: `Navigated directly to investigation file ${targetId}.`,
+        duration: 3000
       });
-    } else {
-      setCurrentView('cases');
-      addToast({
-        type: 'info',
-        title: 'Querying Repository',
-        message: `Filtering cases matching "${searchQuery}".`
-      });
+      setSearchQuery('');
+      return;
     }
+
+    // 2. Navigation shortcut for view names
+    const viewKeywords = {
+      dashboard: 'dashboard',
+      cases: 'cases',
+      support: 'support',
+      intelligence: 'intelligence',
+      patterns: 'patterns',
+      prevention: 'prevention',
+      settings: 'settings',
+      faq: 'support-faq',
+      complaint: 'support-complaint'
+    };
+    const matchedView = viewKeywords[query.toLowerCase()];
+    if (matchedView) {
+      setCurrentView(matchedView);
+      setSearchQuery('');
+      return;
+    }
+
+    // 3. Search query: filter cases repository
+    setCaseSearchQuery(query);
+    setCurrentView('cases');
+    addToast({
+      type: 'info',
+      title: 'Repository Filter Applied',
+      message: `Filtering cases matching "${query}".`,
+      duration: 3000
+    });
     setSearchQuery('');
   };
 
@@ -125,7 +154,7 @@ export default function TopBar({ onToggleMobile }) {
       </div>
 
       {/* Center: Global Search Entry */}
-      <div style={{ flex: 1, maxWidth: '420px', margin: '0 20px' }}>
+      <div className="topbar-search-container ref-search-form" style={{ flex: '0 1 380px', minWidth: '180px', margin: '0 16px' }}>
         <form onSubmit={handleSearchSubmit}>
           <SearchInput
             value={searchQuery}
@@ -191,46 +220,58 @@ export default function TopBar({ onToggleMobile }) {
         {/* Notifications Dropdown */}
         <Dropdown
           align="right"
-          width="320px"
+          width="340px"
+          onOpen={() => setUnreadNotifications(0)}
           trigger={(isOpen) => (
             <button
-              className="ref-icon-button"
-              aria-label="Notifications"
-              onClick={() => setUnreadNotifications(0)}
+              type="button"
+              className={`ref-icon-button ${isOpen ? 'active' : ''}`}
+              aria-label="Investigation Notifications"
+              aria-expanded={isOpen}
             >
               <Bell size={17} />
               {unreadNotifications > 0 && <span className="ref-notif-dot" />}
             </button>
           )}
         >
-          <div style={{ padding: '8px 12px 6px', borderBottom: '1px solid var(--glass-border)' }}>
+          <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid var(--glass-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                 Investigation Alerts
               </span>
-              <span style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: 600 }}>
+              <span style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: 600, background: 'var(--accent-cyan-muted)', padding: '2px 6px', borderRadius: 'var(--radius-xs)' }}>
                 Live Stream
               </span>
             </div>
           </div>
 
-          <div style={{ maxHeight: '280px', overflowY: 'auto', padding: '4px' }}>
+          <div style={{ maxHeight: '280px', overflowY: 'auto', padding: '6px' }}>
             {notifications.map((n) => (
               <div
                 key={n.id}
+                data-dropdown-close="true"
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   if (n.caseId) navigateToCase(n.caseId);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (n.caseId) navigateToCase(n.caseId);
+                  }
+                }}
                 style={{
-                  padding: '8px 10px',
+                  padding: '10px 12px',
                   borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '2px',
-                  transition: 'background var(--transition-fast)'
+                  gap: '3px',
+                  transition: 'background var(--transition-fast)',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.04)'
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-surface-hover)')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -239,7 +280,7 @@ export default function TopBar({ onToggleMobile }) {
                   </span>
                   <span style={{ fontSize: '10px', color: 'var(--text-faint)' }}>{n.time}</span>
                 </div>
-                <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{n.desc}</p>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>{n.desc}</p>
               </div>
             ))}
           </div>
@@ -271,6 +312,7 @@ export default function TopBar({ onToggleMobile }) {
         >
           <div style={{ padding: '6px' }}>
             <div
+              data-dropdown-close="true"
               style={{
                 padding: '8px 10px',
                 borderRadius: 'var(--radius-sm)',
@@ -283,7 +325,7 @@ export default function TopBar({ onToggleMobile }) {
               }}
               onClick={() => {
                 setCurrentView('settings');
-                addToast({ type: 'info', title: 'Specialist Preferences', message: 'Operator credentials loaded.' });
+                addToast({ type: 'info', title: 'Specialist Preferences', message: 'Operator credentials loaded.', duration: 3000 });
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -293,6 +335,7 @@ export default function TopBar({ onToggleMobile }) {
             </div>
 
             <div
+              data-dropdown-close="true"
               style={{
                 padding: '8px 10px',
                 borderRadius: 'var(--radius-sm)',
@@ -305,7 +348,7 @@ export default function TopBar({ onToggleMobile }) {
               }}
               onClick={() => {
                 setCurrentView('settings');
-                addToast({ type: 'info', title: 'Gateway Access', message: 'Stripe, OMS, and Kafka API keys verified.' });
+                addToast({ type: 'info', title: 'Gateway Access', message: 'Stripe, OMS, and Kafka API keys verified.', duration: 3000 });
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -317,6 +360,7 @@ export default function TopBar({ onToggleMobile }) {
             <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }} />
 
             <div
+              data-dropdown-close="true"
               style={{
                 padding: '8px 10px',
                 borderRadius: 'var(--radius-sm)',
@@ -328,7 +372,7 @@ export default function TopBar({ onToggleMobile }) {
                 color: 'var(--status-rose)'
               }}
               onClick={() => {
-                addToast({ type: 'info', title: 'Session Maintained', message: 'Operator session active.' });
+                addToast({ type: 'info', title: 'Session Maintained', message: 'Operator session active.', duration: 3000 });
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(244, 63, 94, 0.1)')}
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}

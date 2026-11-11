@@ -6,7 +6,8 @@ export default function Dropdown({
   align = 'right', // 'left' | 'right'
   width = '200px',
   className = '',
-  style = {}
+  style = {},
+  onOpen
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -32,13 +33,34 @@ export default function Dropdown({
     };
   }, [isOpen]);
 
+  const toggleDropdown = () => {
+    setIsOpen(prev => {
+      const next = !prev;
+      if (next && onOpen) onOpen();
+      return next;
+    });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleDropdown();
+    }
+  };
+
   return (
     <div
       ref={dropdownRef}
       style={{ position: 'relative', display: 'inline-block', ...style }}
       className={className}
     >
-      <div onClick={() => setIsOpen(!isOpen)} role="button" tabIndex={0} style={{ cursor: 'pointer' }}>
+      <div
+        onClick={toggleDropdown}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        style={{ cursor: 'pointer', display: 'inline-flex' }}
+      >
         {trigger(isOpen)}
       </div>
 
@@ -46,7 +68,7 @@ export default function Dropdown({
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 6px)',
+            top: 'calc(100% + 8px)',
             [align]: 0,
             width,
             background: 'var(--bg-elevated)',
@@ -57,7 +79,12 @@ export default function Dropdown({
             zIndex: 'var(--z-dropdown)',
             animation: 'fadeInScale 0.15s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
-          onClick={() => setIsOpen(false)}
+          onClick={(e) => {
+            // Only auto-close if clicking an interactive item designed to close dropdown (e.g. action or link)
+            if (e.target.closest('[data-dropdown-close="true"]') || e.target.closest('button')) {
+              setIsOpen(false);
+            }
+          }}
         >
           {children}
         </div>

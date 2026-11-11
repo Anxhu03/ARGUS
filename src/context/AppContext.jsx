@@ -4,7 +4,35 @@ import { api, API_BASE_URL } from '../services/api.js';
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' | 'cases' | 'case-detail' | 'support' | 'intelligence' | 'settings'
+  const getInitialView = () => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const h = window.location.hash.replace('#', '').toLowerCase();
+      if (['dashboard', 'cases', 'case-detail', 'support', 'intelligence', 'patterns', 'prevention', 'settings'].includes(h)) {
+        return h;
+      }
+    }
+    return 'dashboard';
+  };
+
+  const [currentView, setCurrentViewState] = useState(getInitialView); // 'dashboard' | 'cases' | 'case-detail' | 'support' | 'intelligence' | 'settings'
+
+  const setCurrentView = useCallback((view) => {
+    setCurrentViewState(view);
+    if (typeof window !== 'undefined' && window.location.hash !== `#${view}`) {
+      window.location.hash = view;
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const h = window.location.hash.replace('#', '').toLowerCase();
+      if (h && ['dashboard', 'cases', 'case-detail', 'support', 'intelligence', 'patterns', 'prevention', 'settings'].includes(h)) {
+        setCurrentViewState(h);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
   const [selectedCaseId, setSelectedCaseId] = useState('ARG-1042');
   const [currentCase, setCurrentCase] = useState(null);
   const [isCaseLoading, setIsCaseLoading] = useState(false);
@@ -26,33 +54,101 @@ export function AppProvider({ children }) {
   const [kpis, setKpis] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [caseSearchQuery, setCaseSearchQuery] = useState('');
 
   // Shell & Navigation state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(3);
 
-  // Request race-condition guard
+  // Request race-condition guard & toast timers map
   const activeFetchIdRef = useRef(0);
+  const toastTimersRef = useRef(new Map());
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed(prev => !prev);
   }, []);
 
-  // Toast helper
-  const addToast = useCallback((toast) => {
-    const id = Date.now() + Math.random().toString(36).substring(2, 6);
-    const newToast = { id, type: 'info', ...toast };
-    setToasts(prev => [...prev, newToast]);
-
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4500);
-  }, []);
-
+  // Toast removal helper with timer cancellation
   const removeToast = useCallback((id) => {
+    if (toastTimersRef.current.has(id)) {
+      clearTimeout(toastTimersRef.current.get(id));
+      toastTimersRef.current.delete(id);
+    }
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  // Toast helper: deduplicates identical alerts, supports custom duration/persistent, cleans up timers
+  const addToast = useCallback((toast) => {
+    if (!toast) return;
+
+    setToasts(prev => {
+      // Prevent duplicate notifications if one with the same title & message is already active
+      const existing = prev.find(
+        t => t.title === toast.title && t.message === toast.message
+      );
+      if (existing) {
+        // Reset timer if temporary
+        if (toastTimersRef.current.has(existing.id)) {
+          clearTimeout(toastTimersRef.current.get(existing.id));
+          const duration = toast.duration !== undefined ? toast.duration : 3800;
+          if (duration > 0 && !toast.persistent) {
+            const timer = setTimeout(() => {
+              removeToast(existing.id);
+            }, duration);
+            toastTimersRef.current.set(existing.id, timer);
+          }
+        }
+        return prev;
+      }
+
+      const id = toast.id || (Date.now() + Math.random().toString(36).substring(2, 6));
+      const duration = toast.duration !== undefined ? toast.duration : 3800;
+      const newToast = { id, type: 'info', ...toast };
+
+      if (duration > 0 && !toast.persistent) {
+        const timer = setTimeout(() => {
+          removeToast(id);
+        }, duration);
+        toastTimersRef.current.set(id, timer);
+      }
+
+      const updated = [...prev, newToast];
+      // Keep maximum 4 toasts visible so they never overflow screen height
+      if (updated.length > 4) {
+        const oldest = updated[0];
+        if (toastTimersRef.current.has(oldest.id)) {
+          clearTimeout(toastTimersRef.current.get(oldest.id));
+          toastTimersRef.current.delete(oldest.id);
+        }
+        return updated.slice(1);
+      }
+      return updated;
+    });
+  }, [removeToast]);
+
+  // Clear stale querying or loading notifications when navigating between views
+  const clearTransientToasts = useCallback(() => {
+    setToasts(prev => {
+      return prev.filter(t => {
+        if (t.type === 'error' || t.persistent) return true;
+        const title = (t.title || '').toLowerCase();
+        if (title.includes('querying') || title.includes('filtering') || title.includes('navigat') || t.type === 'loading') {
+          if (toastTimersRef.current.has(t.id)) {
+            clearTimeout(toastTimersRef.current.get(t.id));
+            toastTimersRef.current.delete(t.id);
+          }
+          return false;
+        }
+        return true;
+      });
+    });
+  }, []);
+
+  // Auto-clear transient notifications on view navigation
+  useEffect(() => {
+    clearTransientToasts();
+  }, [currentView, clearTransientToasts]);
 
   const triggerRefresh = useCallback(() => {
     setRefreshCounter(prev => prev + 1);
@@ -331,6 +427,9 @@ export function AppProvider({ children }) {
     toasts,
     addToast,
     removeToast,
+    clearTransientToasts,
+    caseSearchQuery,
+    setCaseSearchQuery,
     triggerRefresh,
     startInvestigationFromSupport,
     updateCaseStatus,
