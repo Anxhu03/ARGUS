@@ -21,7 +21,7 @@ export default function MyCasesSection({
   onNavigateToCase,
   onSubmitNewComplaint
 }) {
-  const { addToast } = useApp();
+  const { addToast, refreshCounter } = useApp();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,7 +43,7 @@ export default function MyCasesSection({
       });
 
     return () => { isMounted = false; };
-  }, []);
+  }, [refreshCounter]);
 
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Badge from '../common/Badge';
 import { COMPLAINT_CATEGORIES, PREFERRED_RESOLUTIONS } from '../../mock/supportData';
@@ -48,6 +48,12 @@ export default function SubmitComplaintSection({
   const [customerEmail, setCustomerEmail] = useState('david.kim@enterprise.org');
   const [priority, setPriority] = useState('High');
   const [disputedAmount, setDisputedAmount] = useState('$389.00');
+
+  // Synchronize prefilled values from Ask ARGUS or parent components
+  useEffect(() => {
+    if (initialCategory) setCategory(initialCategory);
+    if (initialDescription) setDescription(initialDescription);
+  }, [initialCategory, initialDescription]);
 
   // Evidence Attachments State (Local prototype only)
   const [attachments, setAttachments] = useState([]);
@@ -161,7 +167,9 @@ export default function SubmitComplaintSection({
       addToast({
         type: 'success',
         title: `Complaint Submitted: ${newCase.id}`,
-        message: 'Case registered in local session. Autonomous investigation initialized.'
+        message: api.isLiveBackend()
+          ? 'Case registered in backend SQLite store. Autonomous investigation initialized.'
+          : 'Case registered in session store. Autonomous investigation initialized.'
       });
     } catch (err) {
       console.error(err);
@@ -988,8 +996,10 @@ export default function SubmitComplaintSection({
               <span style={{ color: 'var(--status-emerald)' }}>{submittedCase.resolutionPreference}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Session Storage:</span>
-              <span style={{ color: 'var(--text-secondary)' }}>Available in Case Registry during current session</span>
+              <span style={{ color: 'var(--text-muted)' }}>Storage Layer:</span>
+              <span style={{ color: 'var(--text-secondary)' }}>
+                {api.isLiveBackend() ? 'Persisted in Backend SQLite Database' : 'Session Prototype Cache'}
+              </span>
             </div>
           </div>
 

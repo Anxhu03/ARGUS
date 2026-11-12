@@ -213,8 +213,7 @@ export default function Sidebar({ isOpen, onCloseMobile, isMobile = false }) {
                   {section.items.map((item) => {
                     const isActive =
                       currentView === item.id ||
-                      (item.id === 'case-detail' && currentView === 'investigations') ||
-                      (item.id === 'support' && (currentView === 'support-faq' || currentView === 'support-ask'));
+                      (item.id === 'case-detail' && currentView === 'investigations');
 
                     return (
                       <SidebarNavItem

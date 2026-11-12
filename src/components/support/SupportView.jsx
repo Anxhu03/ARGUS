@@ -21,12 +21,39 @@ import {
 } from 'lucide-react';
 
 export default function SupportView() {
-  const { supportMode, setSupportMode, navigateToCase } = useApp();
+  const { currentView, setCurrentView, supportMode, setSupportMode, navigateToCase } = useApp();
 
   // Normalized active tab: 'overview' | 'faq' | 'ask' | 'complaint' | 'my-cases'
-  const activeTab = supportMode === 'agent'
-    ? 'complaint'
-    : (supportMode || 'overview');
+  const getNormalizedTab = () => {
+    // If currentView is a specific sub-support route, prioritize it
+    if (currentView === 'support-faq') return 'faq';
+    if (currentView === 'support-ask') return 'ask';
+    if (currentView === 'support-complaint') return 'complaint';
+    if (currentView === 'support-my-cases') return 'my-cases';
+
+    // Otherwise use supportMode
+    if (supportMode === 'customer' || supportMode === 'agent' || supportMode === 'complaint') return 'complaint';
+    if (supportMode === 'faq') return 'faq';
+    if (supportMode === 'ask') return 'ask';
+    if (supportMode === 'my-cases') return 'my-cases';
+    return 'overview';
+  };
+
+  const activeTab = getNormalizedTab();
+
+  const handleTabChange = (tabId) => {
+    setSupportMode(tabId);
+    const viewMapping = {
+      overview: 'support',
+      faq: 'support-faq',
+      ask: 'support-ask',
+      complaint: 'support-complaint',
+      'my-cases': 'support-my-cases'
+    };
+    if (setCurrentView) {
+      setCurrentView(viewMapping[tabId] || 'support');
+    }
+  };
 
   // Context prefill from Ask ARGUS to Complaint form
   const [complaintPrefill, setComplaintPrefill] = useState({
@@ -36,7 +63,7 @@ export default function SupportView() {
 
   const handleStartComplaintWithContext = ({ category, description }) => {
     setComplaintPrefill({ category, description });
-    setSupportMode('complaint');
+    handleTabChange('complaint');
   };
 
   const supportTabs = [
@@ -106,7 +133,7 @@ export default function SupportView() {
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setSupportMode(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 style={{
                   border: 'none',
                   padding: '6px 12px',
@@ -187,7 +214,7 @@ export default function SupportView() {
           >
             {/* Entry 1: FAQ */}
             <div
-              onClick={() => setSupportMode('faq')}
+              onClick={() => handleTabChange('faq')}
               className="ref-card"
               style={{
                 padding: '24px',
@@ -246,7 +273,7 @@ export default function SupportView() {
 
             {/* Entry 2: Ask ARGUS */}
             <div
-              onClick={() => setSupportMode('ask')}
+              onClick={() => handleTabChange('ask')}
               className="ref-card"
               style={{
                 padding: '24px',
@@ -305,7 +332,7 @@ export default function SupportView() {
 
             {/* Entry 3: Submit Complaint */}
             <div
-              onClick={() => setSupportMode('complaint')}
+              onClick={() => handleTabChange('complaint')}
               className="ref-card"
               style={{
                 padding: '24px',
@@ -395,7 +422,7 @@ export default function SupportView() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => setSupportMode('my-cases')}
+                onClick={() => handleTabChange('my-cases')}
                 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 <span>View My Cases</span>
@@ -411,8 +438,8 @@ export default function SupportView() {
           ========================================================================= */}
       {activeTab === 'faq' && (
         <SupportFaqSection
-          onNavigateToAsk={() => setSupportMode('ask')}
-          onNavigateToComplaint={() => setSupportMode('complaint')}
+          onNavigateToAsk={() => handleTabChange('ask')}
+          onNavigateToComplaint={() => handleTabChange('complaint')}
         />
       )}
 
@@ -433,7 +460,7 @@ export default function SupportView() {
           initialCategory={complaintPrefill.category}
           initialDescription={complaintPrefill.description}
           onViewCase={(id) => navigateToCase(id)}
-          onViewMyCases={() => setSupportMode('my-cases')}
+          onViewMyCases={() => handleTabChange('my-cases')}
         />
       )}
 
@@ -443,7 +470,7 @@ export default function SupportView() {
       {activeTab === 'my-cases' && (
         <MyCasesSection
           onNavigateToCase={(id) => navigateToCase(id)}
-          onSubmitNewComplaint={() => setSupportMode('complaint')}
+          onSubmitNewComplaint={() => handleTabChange('complaint')}
         />
       )}
     </div>

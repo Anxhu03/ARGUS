@@ -4,17 +4,33 @@ import { api, API_BASE_URL } from '../services/api.js';
 const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
+  const VALID_VIEWS = [
+    'dashboard',
+    'cases',
+    'case-detail',
+    'investigations',
+    'support',
+    'support-faq',
+    'support-ask',
+    'support-complaint',
+    'support-my-cases',
+    'intelligence',
+    'patterns',
+    'prevention',
+    'settings'
+  ];
+
   const getInitialView = () => {
     if (typeof window !== 'undefined' && window.location.hash) {
       const h = window.location.hash.replace('#', '').toLowerCase();
-      if (['dashboard', 'cases', 'case-detail', 'support', 'intelligence', 'patterns', 'prevention', 'settings'].includes(h)) {
+      if (VALID_VIEWS.includes(h)) {
         return h;
       }
     }
     return 'dashboard';
   };
 
-  const [currentView, setCurrentViewState] = useState(getInitialView); // 'dashboard' | 'cases' | 'case-detail' | 'support' | 'intelligence' | 'settings'
+  const [currentView, setCurrentViewState] = useState(getInitialView);
 
   const setCurrentView = useCallback((view) => {
     setCurrentViewState(view);
@@ -26,8 +42,13 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const handleHashChange = () => {
       const h = window.location.hash.replace('#', '').toLowerCase();
-      if (h && ['dashboard', 'cases', 'case-detail', 'support', 'intelligence', 'patterns', 'prevention', 'settings'].includes(h)) {
+      if (h && VALID_VIEWS.includes(h)) {
         setCurrentViewState(h);
+        if (h === 'support-faq') setSupportMode('faq');
+        else if (h === 'support-ask') setSupportMode('ask');
+        else if (h === 'support-complaint') setSupportMode('complaint');
+        else if (h === 'support-my-cases') setSupportMode('my-cases');
+        else if (h === 'support') setSupportMode('overview');
       }
     };
     window.addEventListener('hashchange', handleHashChange);
@@ -228,11 +249,20 @@ export function AppProvider({ children }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const navigateToSupport = useCallback((mode = 'faq') => {
-    setSupportMode(mode);
-    setCurrentView('support');
+  const navigateToSupport = useCallback((mode = 'overview') => {
+    const validMode = (mode === 'customer' || mode === 'agent') ? 'complaint' : (mode || 'overview');
+    setSupportMode(validMode);
+    const viewMapping = {
+      overview: 'support',
+      faq: 'support-faq',
+      ask: 'support-ask',
+      complaint: 'support-complaint',
+      'my-cases': 'support-my-cases'
+    };
+    const targetView = viewMapping[validMode] || 'support';
+    setCurrentView(targetView);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [setCurrentView]);
 
   const startInvestigationFromSupport = useCallback(async (payload) => {
     try {

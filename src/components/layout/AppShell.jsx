@@ -41,7 +41,7 @@ export default function AppShell({ children }) {
           </div>
 
           <div className="footer-right">
-            <span>Branch: <code>anxhu/argus-phase-2</code></span>
+            <span>Branch: <code>anxhu/argus-phase-5</code></span>
             <span className="footer-separator">•</span>
             <span className="footer-status-dot" title="Cluster Healthy" />
             <span>4 Agent Nodes Operational</span>

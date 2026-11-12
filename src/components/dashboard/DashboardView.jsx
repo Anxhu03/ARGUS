@@ -212,7 +212,7 @@ export default function DashboardView() {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => navigateToSupport('customer')}
+            onClick={() => navigateToSupport('complaint')}
             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <PlusCircle size={13} />
@@ -223,7 +223,7 @@ export default function DashboardView() {
           <button
             type="button"
             className="btn btn-primary btn-sm"
-            onClick={() => navigateToSupport('agent')}
+            onClick={() => navigateToSupport('complaint')}
             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <Sparkles size={13} />
@@ -387,8 +387,8 @@ export default function DashboardView() {
 
         {/* Section H: Quick Actions */}
         <QuickActionsCard
-          onSubmitComplaint={() => navigateToSupport('customer')}
-          onOpenSupport={() => navigateToSupport('agent')}
+          onSubmitComplaint={() => navigateToSupport('complaint')}
+          onOpenSupport={() => navigateToSupport('overview')}
           onViewAllCases={() => setCurrentView('cases')}
           onOpenIntelligence={() => setCurrentView('intelligence')}
         />
